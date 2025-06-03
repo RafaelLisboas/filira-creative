@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* Animação do Gradiente para o Background da Página */
         @keyframes animatedPageBackground {
@@ -90,6 +91,9 @@
         }
         .color-palette div {
             @apply w-10 h-10 rounded-full shadow-md mx-1;
+        }
+        #musicToggleButton {
+            @apply fixed bottom-4 right-4 bg-pink-500 text-white p-3 rounded-full shadow-lg hover:bg-pink-600 transition-colors z-50;
         }
     </style>
 </head>
@@ -203,12 +207,10 @@
         </div>
     </section>
 
-    <!-- Seção de Recursos Gemini API -->
     <section id="gemini-features" class="py-16 bg-purple-50">
         <div class="container mx-auto px-6">
             <h2 class="section-title text-purple-600">Inspiração Criativa com Gemini ✨</h2>
             <div class="grid md:grid-cols-2 gap-12">
-                <!-- Gerador de Ideias para Projetos -->
                 <div class="bg-white p-6 rounded-xl shadow-lg">
                     <h3 class="text-2xl font-semibold mb-4 text-purple-700 pacifico-font">Gerador de Ideias para Projetos ✨</h3>
                     <p class="text-gray-600 mb-4">Sem ideias para o seu próximo projeto de papelaria? Descreva os materiais que você tem ou o tema que gostaria de explorar, e deixe a Gemini te ajudar!</p>
@@ -224,7 +226,6 @@
                     <p class="text-xs text-gray-400 mt-2 text-right">Powered by Gemini</p>
                 </div>
 
-                <!-- Assistente de Cores para Projetos -->
                 <div class="bg-white p-6 rounded-xl shadow-lg">
                     <h3 class="text-2xl font-semibold mb-4 text-purple-700 pacifico-font">Assistente de Cores para Projetos ✨</h3>
                     <p class="text-gray-600 mb-4">Quer criar uma combinação de cores perfeita? Descreva seu projeto ou o sentimento que deseja transmitir, e a Gemini sugere uma paleta!</p>
@@ -237,7 +238,6 @@
                     </button>
                     <div id="colorsLoader" class="hidden loader"></div>
                     <div id="colorsResult" class="mt-4 text-sm text-gray-700">
-                        <!-- Paleta de cores será exibida aqui -->
                     </div>
                      <p class="text-xs text-gray-400 mt-2 text-right">Powered by Gemini</p>
                 </div>
@@ -290,6 +290,10 @@
         </div>
     </footer>
 
+    <button id="musicToggleButton" title="Tocar/Pausar Música">
+        <i class="fas fa-play"></i>
+    </button>
+
     <script>
         // Mobile menu toggle
         const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -303,23 +307,17 @@
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 mobileMenu.classList.add('hidden'); 
-
                 const targetId = this.getAttribute('href');
                 const targetElement = document.querySelector(targetId);
                 if (targetElement) {
-                    targetElement.scrollIntoView({
-                        behavior: 'smooth'
-                    });
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
                 }
-                
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active-link'));
                 if (!this.classList.contains('block')) {
                     this.classList.add('active-link');
                 } else {
                     const desktopLink = document.querySelector(`.hidden.md\\:flex a[href="${targetId}"]`);
-                    if (desktopLink) {
-                        desktopLink.classList.add('active-link');
-                    }
+                    if (desktopLink) { desktopLink.classList.add('active-link'); }
                 }
             });
         });
@@ -332,15 +330,11 @@
             let current = 'home'; 
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                if (pageYOffset >= sectionTop - 70) { 
-                    current = section.getAttribute('id');
-                }
+                if (pageYOffset >= sectionTop - 70) { current = section.getAttribute('id'); }
             });
             navLinks.forEach(link => {
                 link.classList.remove('active-link');
-                if (link.getAttribute('href').substring(1) === current) {
-                    link.classList.add('active-link');
-                }
+                if (link.getAttribute('href').substring(1) === current) { link.classList.add('active-link'); }
             });
             if (pageYOffset < sections[0].offsetTop - 70 && current === 'home' ) {
                  document.querySelector('.nav-link[href="#home"]').classList.add('active-link');
@@ -350,158 +344,169 @@
         });
 
         // --- Gemini API Features ---
-        const apiKey = ""; // API Key será fornecida pelo ambiente Canvas
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-        // Gerador de Ideias para Projetos
+        const apiKey = ""; 
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const ideaKeywordsInput = document.getElementById('ideaKeywords');
         const generateIdeasButton = document.getElementById('generateIdeasButton');
         const ideasLoader = document.getElementById('ideasLoader');
         const ideasResultDiv = document.getElementById('ideasResult');
 
-        generateIdeasButton.addEventListener('click', async () => {
-            const keywords = ideaKeywordsInput.value.trim();
-            if (!keywords) {
-                ideasResultDiv.innerHTML = '<p class="text-red-500">Por favor, insira algumas palavras-chave.</p>';
-                return;
-            }
-
-            ideasLoader.classList.remove('hidden');
-            ideasResultDiv.innerHTML = '';
-
-            const prompt = `Gere 3 ideias criativas e curtas para projetos de papelaria usando os seguintes materiais ou temas: "${keywords}". Para cada ideia, forneça um nome criativo em negrito e uma breve descrição (1-2 frases). Formate a resposta como uma lista não ordenada.`;
-            
-            try {
-                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Erro na API: ${response.statusText}`);
+        if (generateIdeasButton) {
+            generateIdeasButton.addEventListener('click', async () => {
+                const keywords = ideaKeywordsInput.value.trim();
+                if (!keywords) {
+                    ideasResultDiv.innerHTML = '<p class="text-red-500">Por favor, insira algumas palavras-chave.</p>';
+                    return;
                 }
-
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    let generatedText = result.candidates[0].content.parts[0].text;
-                    
-                    // Simples formatação para exibir melhor a lista
-                    generatedText = generatedText.replace(/\n\*/g, '<li>'); // Converte * para <li>
-                    generatedText = generatedText.replace(/\n/g, '<br>'); // Converte novas linhas para <br>
-                    // Envolve nomes de ideias em negrito (assumindo que o Gemini os retorna assim ou com algum marcador)
-                    generatedText = generatedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-
-                    ideasResultDiv.innerHTML = `<ul>${generatedText}</ul>`;
-                } else {
-                    ideasResultDiv.innerHTML = '<p class="text-red-500">Não foi possível gerar ideias. Tente novamente.</p>';
-                    console.error('Resposta inesperada da API:', result);
+                ideasLoader.classList.remove('hidden');
+                ideasResultDiv.innerHTML = '';
+                const prompt = `Gere 3 ideias criativas e curtas para projetos de papelaria usando os seguintes materiais ou temas: "${keywords}". Para cada ideia, forneça um nome criativo em negrito e uma breve descrição (1-2 frases). Formate a resposta como uma lista não ordenada.`;
+                try {
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                    const response = await fetch(geminiApiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) { throw new Error(`Erro na API: ${response.statusText}`); }
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                        let generatedText = result.candidates[0].content.parts[0].text;
+                        generatedText = generatedText.replace(/\n\*/g, '<li>'); 
+                        generatedText = generatedText.replace(/\n/g, '<br>'); 
+                        generatedText = generatedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+                        ideasResultDiv.innerHTML = `<ul>${generatedText}</ul>`;
+                    } else {
+                        ideasResultDiv.innerHTML = '<p class="text-red-500">Não foi possível gerar ideias. Tente novamente.</p>';
+                        console.error('Resposta inesperada da API:', result);
+                    }
+                } catch (error) {
+                    console.error('Erro ao gerar ideias:', error);
+                    ideasResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro: ${error.message}. Verifique o console para mais detalhes.</p>`;
+                } finally {
+                    ideasLoader.classList.add('hidden');
                 }
-            } catch (error) {
-                console.error('Erro ao gerar ideias:', error);
-                ideasResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro: ${error.message}. Verifique o console para mais detalhes.</p>`;
-            } finally {
-                ideasLoader.classList.add('hidden');
-            }
-        });
+            });
+        }
 
-        // Assistente de Cores para Projetos
         const colorKeywordsInput = document.getElementById('colorKeywords');
         const generateColorsButton = document.getElementById('generateColorsButton');
         const colorsLoader = document.getElementById('colorsLoader');
         const colorsResultDiv = document.getElementById('colorsResult');
 
-        generateColorsButton.addEventListener('click', async () => {
-            const keywords = colorKeywordsInput.value.trim();
-            if (!keywords) {
-                colorsResultDiv.innerHTML = '<p class="text-red-500">Por favor, descreva seu projeto ou sentimento.</p>';
-                return;
-            }
-
-            colorsLoader.classList.remove('hidden');
-            colorsResultDiv.innerHTML = '';
-
-            const prompt = `Sugira uma paleta de 3 a 5 cores que combinem com a seguinte descrição de projeto ou sentimento: "${keywords}". Forneça os nomes das cores e seus códigos hexadecimais.`;
-            
-            // Schema para resposta estruturada (JSON)
-            const schema = {
-                type: "OBJECT",
-                properties: {
-                    paletteName: { type: "STRING", description: "Um nome criativo para a paleta de cores." },
-                    colors: {
-                        type: "ARRAY",
-                        description: "Uma lista de cores, cada uma com nome e código hexadecimal.",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                name: { type: "STRING", description: "Nome da cor (ex: Azul Céu, Rosa Suave)" },
-                                hex: { type: "STRING", description: "Código hexadecimal da cor (ex: #87CEEB)" }
-                            },
-                            required: ["name", "hex"]
-                        }
+        if (generateColorsButton) {
+            generateColorsButton.addEventListener('click', async () => {
+                const keywords = colorKeywordsInput.value.trim();
+                if (!keywords) {
+                    colorsResultDiv.innerHTML = '<p class="text-red-500">Por favor, descreva seu projeto ou sentimento.</p>';
+                    return;
+                }
+                colorsLoader.classList.remove('hidden');
+                colorsResultDiv.innerHTML = '';
+                const prompt = `Sugira uma paleta de 3 a 5 cores que combinem com a seguinte descrição de projeto ou sentimento: "${keywords}". Forneça os nomes das cores e seus códigos hexadecimais.`;
+                const schema = { type: "OBJECT", properties: { paletteName: { type: "STRING", description: "Um nome criativo para a paleta de cores." }, colors: { type: "ARRAY", description: "Uma lista de cores, cada uma com nome e código hexadecimal.", items: { type: "OBJECT", properties: { name: { type: "STRING", description: "Nome da cor (ex: Azul Céu, Rosa Suave)" }, hex: { type: "STRING", description: "Código hexadecimal da cor (ex: #87CEEB)" } }, required: ["name", "hex"] } } }, required: ["paletteName", "colors"] };
+                try {
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
+                    const response = await fetch(geminiApiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) { throw new Error(`Erro na API de cores: ${response.statusText}`); }
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0 && result.candidates[0].content.parts[0].text) {
+                        const jsonResponseText = result.candidates[0].content.parts[0].text;
+                        const parsedJson = JSON.parse(jsonResponseText);
+                        let htmlOutput = `<h4 class="font-semibold text-purple-600 mb-2">${parsedJson.paletteName || 'Paleta Sugerida'}:</h4>`;
+                        htmlOutput += '<div class="flex flex-wrap justify-center mb-2 color-palette">';
+                        parsedJson.colors.forEach(color => { htmlOutput += `<div style="background-color: ${color.hex};" title="${color.name} (${color.hex})"></div>`; });
+                        htmlOutput += '</div>';
+                        htmlOutput += '<ul class="list-disc list-inside">';
+                        parsedJson.colors.forEach(color => { htmlOutput += `<li>${color.name}: <span class="font-mono">${color.hex}</span></li>`; });
+                        htmlOutput += '</ul>';
+                        colorsResultDiv.innerHTML = htmlOutput;
+                    } else {
+                        colorsResultDiv.innerHTML = '<p class="text-red-500">Não foi possível gerar a paleta de cores. Tente novamente.</p>';
+                        console.error('Resposta inesperada da API de cores:', result);
                     }
+                } catch (error) {
+                    console.error('Erro ao gerar paleta de cores:', error);
+                    colorsResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro: ${error.message}. Verifique o console para mais detalhes.</p>`;
+                } finally {
+                    colorsLoader.classList.add('hidden');
+                }
+            });
+        }
+
+        // --- Música de Fundo com Tone.js ---
+        const musicToggleButton = document.getElementById('musicToggleButton');
+        let musicPlaying = false;
+        let synth, sequence;
+
+        // Inicializa o sintetizador e a melodia
+        function setupMusic() {
+            // Um sintetizador suave
+            synth = new Tone.Synth({
+                oscillator: { type: 'sine' }, // 'sine', 'triangle', 'sawtooth', 'square'
+                envelope: {
+                    attack: 0.1,
+                    decay: 0.2,
+                    sustain: 0.3,
+                    release: 1
                 },
-                required: ["paletteName", "colors"]
-            };
+                volume: -12 // Volume mais baixo para música de fundo
+            }).toDestination();
 
-            try {
-                const payload = {
-                    contents: [{ role: "user", parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: schema
+            // Uma melodia simples e calma no estilo "Aquarela" (tons suaves)
+            // Escala de Dó Maior: C4, D4, E4, F4, G4, A4, B4, C5
+            const melody = [
+                { time: '0:0', note: 'C4', duration: '4n' },
+                { time: '0:2', note: 'E4', duration: '4n' },
+                { time: '1:0', note: 'G4', duration: '2n' },
+                { time: '1:2', note: 'E4', duration: '4n'},
+                { time: '2:0', note: 'D4', duration: '4n' },
+                { time: '2:2', note: 'F4', duration: '4n' },
+                { time: '3:0', note: 'E4', duration: '2n' },
+                { time: '3:2', note: 'C4', duration: '4n' },
+
+                { time: '4:0', note: 'G3', duration: '4n' },
+                { time: '4:2', note: 'B3', duration: '4n' },
+                { time: '5:0', note: 'D4', duration: '2n' },
+                { time: '5:2', note: 'B3', duration: '4n'},
+                { time: '6:0', note: 'A3', duration: '4n' },
+                { time: '6:2', note: 'C4', duration: '4n' },
+                { time: '7:0', note: 'B3', duration: '2n' },
+                { time: '7:2', note: 'G3', duration: '4n' }
+            ];
+
+            sequence = new Tone.Part((time, value) => {
+                synth.triggerAttackRelease(value.note, value.duration, time);
+            }, melody);
+            
+            sequence.loop = true; // Faz a melodia tocar em loop
+            sequence.loopEnd = '8m'; // Duração do loop (8 compassos)
+            Tone.Transport.bpm.value = 80; // Tempo calmo
+        }
+
+
+        if (musicToggleButton) {
+            musicToggleButton.addEventListener('click', async () => {
+                if (Tone.context.state !== 'running') {
+                    // Inicia o contexto de áudio do Tone.js (necessário em navegadores modernos)
+                    // Isso geralmente requer uma interação do usuário (como um clique)
+                    await Tone.start(); 
+                    console.log('Contexto de áudio iniciado.');
+                    if (!synth) { // Configura a música apenas uma vez
+                         setupMusic();
                     }
-                };
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Erro na API de cores: ${response.statusText}`);
                 }
 
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0 &&
-                    result.candidates[0].content.parts[0].text) {
-                    
-                    const jsonResponseText = result.candidates[0].content.parts[0].text;
-                    const parsedJson = JSON.parse(jsonResponseText);
-
-                    let htmlOutput = `<h4 class="font-semibold text-purple-600 mb-2">${parsedJson.paletteName || 'Paleta Sugerida'}:</h4>`;
-                    htmlOutput += '<div class="flex flex-wrap justify-center mb-2 color-palette">';
-                    parsedJson.colors.forEach(color => {
-                        htmlOutput += `<div style="background-color: ${color.hex};" title="${color.name} (${color.hex})"></div>`;
-                    });
-                    htmlOutput += '</div>';
-                    htmlOutput += '<ul class="list-disc list-inside">';
-                    parsedJson.colors.forEach(color => {
-                        htmlOutput += `<li>${color.name}: <span class="font-mono">${color.hex}</span></li>`;
-                    });
-                    htmlOutput += '</ul>';
-                    
-                    colorsResultDiv.innerHTML = htmlOutput;
-
+                if (!musicPlaying) {
+                    Tone.Transport.start();
+                    sequence.start(0); // Inicia a sequência
+                    musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
+                    musicPlaying = true;
                 } else {
-                    colorsResultDiv.innerHTML = '<p class="text-red-500">Não foi possível gerar a paleta de cores. Tente novamente.</p>';
-                     console.error('Resposta inesperada da API de cores:', result);
+                    Tone.Transport.pause(); // Pausa a música, mas não para completamente
+                    // Para parar e resetar: Tone.Transport.stop(); sequence.stop();
+                    musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
+                    musicPlaying = false;
                 }
-            } catch (error) {
-                console.error('Erro ao gerar paleta de cores:', error);
-                colorsResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro: ${error.message}. Verifique o console para mais detalhes.</p>`;
-            } finally {
-                colorsLoader.classList.add('hidden');
-            }
-        });
-
+            });
+        }
     </script>
 </body>
 </html>
+
