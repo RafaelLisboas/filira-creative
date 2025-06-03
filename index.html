@@ -8,17 +8,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Animação do Gradiente para o Background da Página */
+        @keyframes animatedPageBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            background-image: linear-gradient(
+                to right,
+                rgba(253, 230, 138, 0.85), /* Amarelo claro translúcido */
+                rgba(251, 207, 232, 0.85), /* Rosa claro translúcido */
+                rgba(252, 182, 203, 0.80),/* Rosa um pouco mais forte translúcido */
+                rgba(253, 230, 138, 0.85)
+            );
+            background-size: 300% 300%;
+            animation: animatedPageBackground 25s ease-in-out infinite;
+            overflow-x: hidden;
         }
+
         .pacifico-font {
             font-family: 'Pacifico', cursive;
         }
+
         .hero-bg {
-            background-image: linear-gradient(to right, rgba(253, 230, 138, 0.8), rgba(251, 207, 232, 0.8)), url('imagens/coloque as duas mão dela no rosto e deixa ela com blush no rosto (1).png');
-            background-size: cover;
-            background-position: center;
+            position: relative;
+            z-index: 1;
         }
+
+        .hero-bg > .container {
+            position: relative; 
+            z-index: 2;
+        }
+
         .section-title {
             @apply text-3xl md:text-4xl font-semibold text-center mb-10 pacifico-font text-pink-500;
         }
@@ -34,15 +58,42 @@
         .btn-secondary {
             @apply bg-yellow-400 text-gray-800 hover:bg-yellow-500;
         }
+        .btn-gemini {
+            @apply bg-purple-500 text-white hover:bg-purple-600 inline-flex items-center;
+        }
         .nav-link {
             @apply text-gray-700 hover:text-pink-500 px-3 py-2 rounded-md text-sm font-medium transition-colors;
         }
         .active-link {
             @apply text-pink-500 font-semibold;
         }
+
+        header, section, footer {
+            position: relative;
+            z-index: 1;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #E91E63; /* Pink */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .gemini-result-card {
+            @apply bg-white p-4 rounded-lg shadow-md mb-3 border-l-4 border-pink-400;
+        }
+        .color-palette div {
+            @apply w-10 h-10 rounded-full shadow-md mx-1;
+        }
     </style>
 </head>
-<body class="bg-pink-50">
+<body>
 
     <header class="bg-white shadow-md sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -54,6 +105,7 @@
                 <a href="#home" class="nav-link active-link">Início</a>
                 <a href="#products" class="nav-link">Produtos</a>
                 <a href="#about" class="nav-link">Sobre Nós</a>
+                <a href="#gemini-features" class="nav-link">Inspiração ✨</a>
                 <a href="#contact" class="nav-link">Contato</a>
             </div>
             <div class="md:hidden">
@@ -66,6 +118,7 @@
             <a href="#home" class="block nav-link text-center py-2">Início</a>
             <a href="#products" class="block nav-link text-center py-2">Produtos</a>
             <a href="#about" class="block nav-link text-center py-2">Sobre Nós</a>
+            <a href="#gemini-features" class="block nav-link text-center py-2">Inspiração ✨</a>
             <a href="#contact" class="block nav-link text-center py-2">Contato</a>
         </div>
     </header>
@@ -126,57 +179,67 @@
         <div class="container mx-auto px-6">
             <h2 class="section-title">Navegue por Categorias</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="relative rounded-xl overflow-hidden group">
-                    <img src="https://placehold.co/600x400/E1BEE7/9C27B0?text=Cadernos+e+Planners" alt="Cadernos e Planners" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';">
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                        <h3 class="text-white text-2xl font-semibold pacifico-font">Cadernos & Planners</h3>
-                    </div>
-                </div>
-                <div class="relative rounded-xl overflow-hidden group">
-                    <img src="https://placehold.co/600x400/BBDEFB/2196F3?text=Escrita+e+Desenho" alt="Escrita e Desenho" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';">
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                        <h3 class="text-white text-2xl font-semibold pacifico-font">Escrita & Desenho</h3>
-                    </div>
-                </div>
-                <div class="relative rounded-xl overflow-hidden group">
-                    <img src="https://placehold.co/600x400/D1C4E9/673AB7?text=Materiais+Artísticos" alt="Materiais Artísticos" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';">
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                        <h3 class="text-white text-2xl font-semibold pacifico-font">Materiais Artísticos</h3>
-                    </div>
-                </div>
-                <div class="relative rounded-xl overflow-hidden group">
-                    <img src="https://placehold.co/600x400/FFCDD2/F44336?text=Organização" alt="Organização" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';">
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                        <h3 class="text-white text-2xl font-semibold pacifico-font">Organização</h3>
-                    </div>
-                </div>
-                 <div class="relative rounded-xl overflow-hidden group">
-                    <img src="https://placehold.co/600x400/FFF59D/FFEB3B?text=Papéis+Especiais" alt="Papéis Especiais" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';">
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                        <h3 class="text-white text-2xl font-semibold pacifico-font">Papéis Especiais</h3>
-                    </div>
-                </div>
-                 <div class="relative rounded-xl overflow-hidden group">
-                    <img src="https://placehold.co/600x400/CFD8DC/607D8B?text=Acessórios" alt="Acessórios Criativos" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';">
-                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                        <h3 class="text-white text-2xl font-semibold pacifico-font">Acessórios</h3>
-                    </div>
+                <div class="relative rounded-xl overflow-hidden group"><img src="https://placehold.co/600x400/E1BEE7/9C27B0?text=Cadernos+e+Planners" alt="Cadernos e Planners" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';"><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center"><h3 class="text-white text-2xl font-semibold pacifico-font">Cadernos & Planners</h3></div></div>
+                <div class="relative rounded-xl overflow-hidden group"><img src="https://placehold.co/600x400/BBDEFB/2196F3?text=Escrita+e+Desenho" alt="Escrita e Desenho" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';"><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center"><h3 class="text-white text-2xl font-semibold pacifico-font">Escrita & Desenho</h3></div></div>
+                <div class="relative rounded-xl overflow-hidden group"><img src="https://placehold.co/600x400/D1C4E9/673AB7?text=Materiais+Artísticos" alt="Materiais Artísticos" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';"><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center"><h3 class="text-white text-2xl font-semibold pacifico-font">Materiais Artísticos</h3></div></div>
+                <div class="relative rounded-xl overflow-hidden group"><img src="https://placehold.co/600x400/FFCDD2/F44336?text=Organização" alt="Organização" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';"><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center"><h3 class="text-white text-2xl font-semibold pacifico-font">Organização</h3></div></div>
+                <div class="relative rounded-xl overflow-hidden group"><img src="https://placehold.co/600x400/FFF59D/FFEB3B?text=Papéis+Especiais" alt="Papéis Especiais" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';"><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center"><h3 class="text-white text-2xl font-semibold pacifico-font">Papéis Especiais</h3></div></div>
+                <div class="relative rounded-xl overflow-hidden group"><img src="https://placehold.co/600x400/CFD8DC/607D8B?text=Acessórios" alt="Acessórios Criativos" class="w-full h-64 object-cover transform transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';"><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center"><h3 class="text-white text-2xl font-semibold pacifico-font">Acessórios</h3></div></div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="about" class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Nossa História</h2>
+            <div class="flex flex-col md:flex-row items-center gap-10">
+                <div class="md:w-1/2"><img src="https://placehold.co/600x400/F8BBD0/E91E63?text=Equipe+Filira+Creative" alt="Sobre Filira Creative" class="rounded-xl shadow-lg w-full" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';"></div>
+                <div class="md:w-1/2 text-gray-700 text-lg">
+                    <p class="mb-4">Bem-vindo à <span class="pacifico-font text-pink-500">Filira Creative</span>! Nascemos da paixão por papelaria e da crença de que a criatividade pode transformar o dia a dia.</p>
+                    <p class="mb-4">Nossa missão é oferecer produtos de alta qualidade que inspirem artistas, estudantes, planejadores e todos que amam o universo da papelaria. Selecionamos cada item com carinho, buscando sempre novidades e tendências para colorir suas ideias.</p>
+                    <p>Mais do que uma loja, queremos ser um espaço de inspiração e fomento à criatividade. Explore, crie e divirta-se!</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="about" class="py-16 bg-white">
+    <!-- Seção de Recursos Gemini API -->
+    <section id="gemini-features" class="py-16 bg-purple-50">
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Nossa História</h2>
-            <div class="flex flex-col md:flex-row items-center gap-10">
-                <div class="md:w-1/2">
-                    <img src="https://placehold.co/600x400/F8BBD0/E91E63?text=Equipe+Filira+Creative" alt="Sobre Filira Creative" class="rounded-xl shadow-lg w-full" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Imagem+Indisponível';">
+            <h2 class="section-title text-purple-600">Inspiração Criativa com Gemini ✨</h2>
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- Gerador de Ideias para Projetos -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-700 pacifico-font">Gerador de Ideias para Projetos ✨</h3>
+                    <p class="text-gray-600 mb-4">Sem ideias para o seu próximo projeto de papelaria? Descreva os materiais que você tem ou o tema que gostaria de explorar, e deixe a Gemini te ajudar!</p>
+                    <div class="mb-4">
+                        <label for="ideaKeywords" class="block text-sm font-medium text-gray-700 mb-1">Suas palavras-chave (ex: aquarela, flores, cartão):</label>
+                        <input type="text" id="ideaKeywords" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-purple-500 focus:border-purple-500" placeholder="Ex: canetas coloridas, planner, viagem">
+                    </div>
+                    <button id="generateIdeasButton" class="btn btn-gemini w-full">
+                        <i class="fas fa-lightbulb mr-2"></i>Gerar Ideias
+                    </button>
+                    <div id="ideasLoader" class="hidden loader"></div>
+                    <div id="ideasResult" class="mt-4 text-sm text-gray-700"></div>
+                    <p class="text-xs text-gray-400 mt-2 text-right">Powered by Gemini</p>
                 </div>
-                <div class="md:w-1/2 text-gray-700 text-lg">
-                    <p class="mb-4">Bem-vindo à <span class="pacifico-font text-pink-500">Filira Creative</span>! Nascemos da paixão por papelaria e da crença de que a criatividade pode transformar o dia a dia.</p>
-                    <p class="mb-4">Nossa missão é oferecer produtos de alta qualidade que inspirem artistas, estudantes, planejadores e todos que amam o universo da papelaria. Selecionamos cada item com carinho, buscando sempre novidades e tendências para colorir suas ideias.</p>
-                    <p>Mais do que uma loja, queremos ser um espaço de inspiração e fomento à criatividade. Explore, crie e divirta-se!</p>
+
+                <!-- Assistente de Cores para Projetos -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-700 pacifico-font">Assistente de Cores para Projetos ✨</h3>
+                    <p class="text-gray-600 mb-4">Quer criar uma combinação de cores perfeita? Descreva seu projeto ou o sentimento que deseja transmitir, e a Gemini sugere uma paleta!</p>
+                    <div class="mb-4">
+                        <label for="colorKeywords" class="block text-sm font-medium text-gray-700 mb-1">Descreva seu projeto/sentimento (ex: cartão alegre, scrapbook vintage):</label>
+                        <input type="text" id="colorKeywords" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-purple-500 focus:border-purple-500" placeholder="Ex: convite de casamento romântico">
+                    </div>
+                    <button id="generateColorsButton" class="btn btn-gemini w-full">
+                        <i class="fas fa-palette mr-2"></i>Sugerir Cores
+                    </button>
+                    <div id="colorsLoader" class="hidden loader"></div>
+                    <div id="colorsResult" class="mt-4 text-sm text-gray-700">
+                        <!-- Paleta de cores será exibida aqui -->
+                    </div>
+                     <p class="text-xs text-gray-400 mt-2 text-right">Powered by Gemini</p>
                 </div>
             </div>
         </div>
@@ -199,25 +262,13 @@
             <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
                 <form action="https://formsubmit.co/seu-email-aqui" method="POST">
                      <input type="hidden" name="_next" value="https://seusite.github.io/filira-creative/obrigado.html"> <input type="hidden" name="_subject" value="Nova Mensagem do Site Filira Creative!">
-
-                    <div class="mb-6">
-                        <label for="name" class="block text-gray-700 font-semibold mb-2">Nome</label>
-                        <input type="text" id="name" name="name" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500" required>
-                    </div>
-                    <div class="mb-6">
-                        <label for="email_contact" class="block text-gray-700 font-semibold mb-2">E-mail</label>
-                        <input type="email" id="email_contact" name="email_contact" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500" required>
-                    </div>
-                    <div class="mb-6">
-                        <label for="message" class="block text-gray-700 font-semibold mb-2">Mensagem</label>
-                        <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500" required></textarea>
-                    </div>
+                    <div class="mb-6"><label for="name" class="block text-gray-700 font-semibold mb-2">Nome</label><input type="text" id="name" name="name" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500" required></div>
+                    <div class="mb-6"><label for="email_contact" class="block text-gray-700 font-semibold mb-2">E-mail</label><input type="email" id="email_contact" name="email_contact" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500" required></div>
+                    <div class="mb-6"><label for="message" class="block text-gray-700 font-semibold mb-2">Mensagem</label><textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500" required></textarea></div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary text-lg mb-4">Enviar Mensagem</button>
                         <p class="text-sm text-gray-500 my-3">Ou se preferir, fale conosco diretamente:</p>
-                        <!-- IMPORTANTE: Substitua SEUNUMERODOWHATSAPP pelo seu número completo, incluindo código do país (ex: 5598912345678) -->
-                        <a href="https://wa.me/559884898101" target="_blank" rel="noopener noreferrer" 
-                           class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 w-full sm:w-auto">
+                        <a href="https://wa.me/559884898101" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 w-full sm:w-auto">
                             <i class="fab fa-whatsapp fa-lg mr-2"></i> Chamar no WhatsApp
                         </a>
                     </div>
@@ -251,7 +302,7 @@
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                mobileMenu.classList.add('hidden'); // Close mobile menu on click
+                mobileMenu.classList.add('hidden'); 
 
                 const targetId = this.getAttribute('href');
                 const targetElement = document.querySelector(targetId);
@@ -261,9 +312,8 @@
                     });
                 }
                 
-                // Update active link
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active-link'));
-                if (!this.classList.contains('block')) { // Avoid styling mobile menu items as active in header
+                if (!this.classList.contains('block')) {
                     this.classList.add('active-link');
                 } else {
                     const desktopLink = document.querySelector(`.hidden.md\\:flex a[href="${targetId}"]`);
@@ -274,33 +324,181 @@
             });
         });
         
-        // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        // Active link highlighting on scroll
         const sections = document.querySelectorAll('section[id]');
         const navLinks = document.querySelectorAll('.nav-link:not(.block)'); 
-
         window.addEventListener('scroll', () => {
-            let current = 'home'; // Default to home
+            let current = 'home'; 
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                if (pageYOffset >= sectionTop - 70) { // Adjusted offset for better accuracy with sticky header
+                if (pageYOffset >= sectionTop - 70) { 
                     current = section.getAttribute('id');
                 }
             });
-
             navLinks.forEach(link => {
                 link.classList.remove('active-link');
                 if (link.getAttribute('href').substring(1) === current) {
                     link.classList.add('active-link');
                 }
             });
-            // Ensure "Início" is active if at the top explicitly
             if (pageYOffset < sections[0].offsetTop - 70 && current === 'home' ) {
                  document.querySelector('.nav-link[href="#home"]').classList.add('active-link');
-            } else if (!document.querySelector('.nav-link.active-link') && current === 'home') { // Fallback if no other link is active
+            } else if (!document.querySelector('.nav-link.active-link') && current === 'home') { 
                 document.querySelector('.nav-link[href="#home"]').classList.add('active-link');
+            }
+        });
+
+        // --- Gemini API Features ---
+        const apiKey = ""; // API Key será fornecida pelo ambiente Canvas
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        // Gerador de Ideias para Projetos
+        const ideaKeywordsInput = document.getElementById('ideaKeywords');
+        const generateIdeasButton = document.getElementById('generateIdeasButton');
+        const ideasLoader = document.getElementById('ideasLoader');
+        const ideasResultDiv = document.getElementById('ideasResult');
+
+        generateIdeasButton.addEventListener('click', async () => {
+            const keywords = ideaKeywordsInput.value.trim();
+            if (!keywords) {
+                ideasResultDiv.innerHTML = '<p class="text-red-500">Por favor, insira algumas palavras-chave.</p>';
+                return;
+            }
+
+            ideasLoader.classList.remove('hidden');
+            ideasResultDiv.innerHTML = '';
+
+            const prompt = `Gere 3 ideias criativas e curtas para projetos de papelaria usando os seguintes materiais ou temas: "${keywords}". Para cada ideia, forneça um nome criativo em negrito e uma breve descrição (1-2 frases). Formate a resposta como uma lista não ordenada.`;
+            
+            try {
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let generatedText = result.candidates[0].content.parts[0].text;
+                    
+                    // Simples formatação para exibir melhor a lista
+                    generatedText = generatedText.replace(/\n\*/g, '<li>'); // Converte * para <li>
+                    generatedText = generatedText.replace(/\n/g, '<br>'); // Converte novas linhas para <br>
+                    // Envolve nomes de ideias em negrito (assumindo que o Gemini os retorna assim ou com algum marcador)
+                    generatedText = generatedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+
+                    ideasResultDiv.innerHTML = `<ul>${generatedText}</ul>`;
+                } else {
+                    ideasResultDiv.innerHTML = '<p class="text-red-500">Não foi possível gerar ideias. Tente novamente.</p>';
+                    console.error('Resposta inesperada da API:', result);
+                }
+            } catch (error) {
+                console.error('Erro ao gerar ideias:', error);
+                ideasResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro: ${error.message}. Verifique o console para mais detalhes.</p>`;
+            } finally {
+                ideasLoader.classList.add('hidden');
+            }
+        });
+
+        // Assistente de Cores para Projetos
+        const colorKeywordsInput = document.getElementById('colorKeywords');
+        const generateColorsButton = document.getElementById('generateColorsButton');
+        const colorsLoader = document.getElementById('colorsLoader');
+        const colorsResultDiv = document.getElementById('colorsResult');
+
+        generateColorsButton.addEventListener('click', async () => {
+            const keywords = colorKeywordsInput.value.trim();
+            if (!keywords) {
+                colorsResultDiv.innerHTML = '<p class="text-red-500">Por favor, descreva seu projeto ou sentimento.</p>';
+                return;
+            }
+
+            colorsLoader.classList.remove('hidden');
+            colorsResultDiv.innerHTML = '';
+
+            const prompt = `Sugira uma paleta de 3 a 5 cores que combinem com a seguinte descrição de projeto ou sentimento: "${keywords}". Forneça os nomes das cores e seus códigos hexadecimais.`;
+            
+            // Schema para resposta estruturada (JSON)
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    paletteName: { type: "STRING", description: "Um nome criativo para a paleta de cores." },
+                    colors: {
+                        type: "ARRAY",
+                        description: "Uma lista de cores, cada uma com nome e código hexadecimal.",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                name: { type: "STRING", description: "Nome da cor (ex: Azul Céu, Rosa Suave)" },
+                                hex: { type: "STRING", description: "Código hexadecimal da cor (ex: #87CEEB)" }
+                            },
+                            required: ["name", "hex"]
+                        }
+                    }
+                },
+                required: ["paletteName", "colors"]
+            };
+
+            try {
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: schema
+                    }
+                };
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro na API de cores: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0 &&
+                    result.candidates[0].content.parts[0].text) {
+                    
+                    const jsonResponseText = result.candidates[0].content.parts[0].text;
+                    const parsedJson = JSON.parse(jsonResponseText);
+
+                    let htmlOutput = `<h4 class="font-semibold text-purple-600 mb-2">${parsedJson.paletteName || 'Paleta Sugerida'}:</h4>`;
+                    htmlOutput += '<div class="flex flex-wrap justify-center mb-2 color-palette">';
+                    parsedJson.colors.forEach(color => {
+                        htmlOutput += `<div style="background-color: ${color.hex};" title="${color.name} (${color.hex})"></div>`;
+                    });
+                    htmlOutput += '</div>';
+                    htmlOutput += '<ul class="list-disc list-inside">';
+                    parsedJson.colors.forEach(color => {
+                        htmlOutput += `<li>${color.name}: <span class="font-mono">${color.hex}</span></li>`;
+                    });
+                    htmlOutput += '</ul>';
+                    
+                    colorsResultDiv.innerHTML = htmlOutput;
+
+                } else {
+                    colorsResultDiv.innerHTML = '<p class="text-red-500">Não foi possível gerar a paleta de cores. Tente novamente.</p>';
+                     console.error('Resposta inesperada da API de cores:', result);
+                }
+            } catch (error) {
+                console.error('Erro ao gerar paleta de cores:', error);
+                colorsResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro: ${error.message}. Verifique o console para mais detalhes.</p>`;
+            } finally {
+                colorsLoader.classList.add('hidden');
             }
         });
 
