@@ -414,7 +414,7 @@
                             htmlOutput += '<div class="flex flex-wrap justify-center mb-2 color-palette">';
                             if (parsedJson.colors && Array.isArray(parsedJson.colors)) {
                                 parsedJson.colors.forEach(color => { 
-                                    if(color && color.hex && color.name) { // Verifica se color, color.hex e color.name existem
+                                    if(color && color.hex && color.name) { 
                                         htmlOutput += `<div style="background-color: ${color.hex};" title="${color.name} (${color.hex})"></div>`;
                                     }
                                 });
@@ -423,7 +423,7 @@
                             htmlOutput += '<ul class="list-disc list-inside">';
                             if (parsedJson.colors && Array.isArray(parsedJson.colors)) {
                                 parsedJson.colors.forEach(color => { 
-                                     if(color && color.hex && color.name) { // Verifica se color, color.hex e color.name existem
+                                     if(color && color.hex && color.name) { 
                                         htmlOutput += `<li>${color.name}: <span class="font-mono">${color.hex}</span></li>`;
                                      }
                                 });
@@ -450,69 +450,140 @@
         // --- Música de Fundo com Tone.js ---
         const musicToggleButton = document.getElementById('musicToggleButton');
         let musicPlaying = false;
-        let synth, sequence;
+        let pluckSynth, musicSequence; // Renomeado para clareza
+        let audioContextUserInteracted = false; 
 
-        function setupMusic() {
-            synth = new Tone.Synth({
-                oscillator: { type: 'sine' },
-                envelope: { attack: 0.1, decay: 0.2, sustain: 0.3, release: 1 },
-                volume: -12 
+        function setupAquarelaMusic() {
+            // PluckSynth para um som que lembra violão
+            pluckSynth = new Tone.PluckSynth({
+                attackNoise: 0.5, // Um pouco de ruído no ataque para simular o "pluck"
+                dampening: 4000,   // Amortecimento das cordas (ajuste para sustain)
+                resonance: 0.7,   // Ressonância do corpo do instrumento
+                volume: -14       // Volume mais baixo para música de fundo
             }).toDestination();
-            const melody = [
-                { time: '0:0', note: 'C4', duration: '4n' }, { time: '0:2', note: 'E4', duration: '4n' },
-                { time: '1:0', note: 'G4', duration: '2n' }, { time: '1:2', note: 'E4', duration: '4n'},
-                { time: '2:0', note: 'D4', duration: '4n' }, { time: '2:2', note: 'F4', duration: '4n' },
-                { time: '3:0', note: 'E4', duration: '2n' }, { time: '3:2', note: 'C4', duration: '4n' },
-                { time: '4:0', note: 'G3', duration: '4n' }, { time: '4:2', note: 'B3', duration: '4n' },
-                { time: '5:0', note: 'D4', duration: '2n' }, { time: '5:2', note: 'B3', duration: '4n'},
-                { time: '6:0', note: 'A3', duration: '4n' }, { time: '6:2', note: 'C4', duration: '4n' },
-                { time: '7:0', note: 'B3', duration: '2n' }, { time: '7:2', note: 'G3', duration: '4n' }
+
+            // Melodia inspirada em "Aquarela" - simplificada para PluckSynth
+            // Foco nas frases melódicas principais e harmonias simples
+            // As notas são representadas como [tempo, nota, duraçãoOpcional]
+            // '4n' = semínima, '2n' = mínima, '1m' = compasso inteiro
+            const aquarelaMelody = [
+                // Introdução / Tema A (Numa folha qualquer...)
+                { time: "0:0:0", note: "G4", duration: "2n" },
+                { time: "0:2:0", note: "E4", duration: "2n" },
+                { time: "1:0:0", note: "C4", duration: "2n" },
+                { time: "1:2:0", note: "D4", duration: "4n" },
+                { time: "1:3:0", note: "E4", duration: "4n" },
+
+                { time: "2:0:0", note: "G4", duration: "2n" },
+                { time: "2:2:0", note: "E4", duration: "2n" },
+                { time: "3:0:0", note: "C4", duration: "2n" },
+                { time: "3:2:0", note: "A3", duration: "2n" }, // Harmonia simples
+
+                // Tema B (E com cinco ou seis retas...)
+                { time: "4:0:0", note: "C5", duration: "4n" },
+                { time: "4:1:0", note: "B4", duration: "4n" },
+                { time: "4:2:0", note: "A4", duration: "2n" },
+                { time: "5:0:0", note: "G4", duration: "2n" },
+                { time: "5:2:0", note: "F4", duration: "4n" }, // Adicionando F# se quiser Gmaj7
+                { time: "5:3:0", note: "E4", duration: "4n" },
+                
+                { time: "6:0:0", note: "D4", duration: "2n" },
+                { time: "6:2:0", note: "C4", duration: "1m" }, // Finaliza a frase
+
+                // Repetição suave ou variação
+                { time: "8:0:0", note: "G3", duration: "2n"}, // Base harmônica
+                { time: "8:2:0", note: "B3", duration: "2n"},
+                { time: "9:0:0", note: "D4", duration: "2n"},
+                { time: "9:2:0", note: "G4", duration: "2n"},
+
+                { time: "10:0:0", note: "C4", duration: "2n"},
+                { time: "10:2:0", note: "E4", duration: "2n"},
+                { time: "11:0:0", note: "G4", duration: "2n"},
+                { time: "11:2:0", note: "C5", duration: "2n"},
+
+                { time: "12:0:0", note: "B4", duration: "4n"},
+                { time: "12:1:0", note: "A4", duration: "4n"},
+                { time: "12:2:0", note: "G4", duration: "2n"},
+                { time: "13:0:0", note: "E4", duration: "1m"},
             ];
-            sequence = new Tone.Part((time, value) => {
-                synth.triggerAttackRelease(value.note, value.duration, time);
-            }, melody);
-            sequence.loop = true; 
-            sequence.loopEnd = '8m'; 
-            Tone.Transport.bpm.value = 80; 
+
+            musicSequence = new Tone.Part((time, value) => {
+                pluckSynth.triggerAttackRelease(value.note, value.duration || "8n", time);
+            }, aquarelaMelody);
+            
+            musicSequence.loop = true; 
+            musicSequence.loopEnd = '14m'; // Ajustado para a duração da nova melodia
+            Tone.Transport.bpm.value = 75; // Um pouco mais rápido para "Aquarela"
+            console.log("Configuração da música 'Aquarela' concluída.");
         }
 
-        if (musicToggleButton) {
-            musicToggleButton.addEventListener('click', async () => {
-                if (Tone.context.state !== 'running') {
-                    try {
-                        await Tone.start(); 
-                        console.log('Contexto de áudio iniciado.');
-                        if (!synth) { 
-                             setupMusic();
-                        }
-                    } catch (e) {
-                        console.error("Erro ao iniciar o contexto de áudio do Tone.js:", e);
-                        musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle"></i>'; // Indica erro
-                        return; 
+        async function controlMusicPlayback(play) {
+            // Garante que o contexto de áudio foi iniciado por uma interação do usuário
+            if (!audioContextUserInteracted && Tone.context.state !== 'running') {
+                try {
+                    await Tone.start(); 
+                    console.log('Contexto de áudio iniciado.');
+                    audioContextUserInteracted = true; 
+                    if (!pluckSynth) { 
+                        setupAquarelaMusic();
                     }
+                } catch (e) {
+                    console.error("Erro ao iniciar o contexto de áudio do Tone.js:", e);
+                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro no áudio"></i>';
+                    return; 
                 }
+            } else if (!pluckSynth) { 
+                 setupAquarelaMusic();
+            }
 
-                if (!musicPlaying) {
-                    if (synth && sequence && Tone.Transport.state !== "started") { // Garante que está tudo configurado
-                        Tone.Transport.start();
-                        sequence.start(0); 
-                        musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
-                        musicPlaying = true;
-                    } else if (synth && sequence && Tone.Transport.state === "paused") {
-                        Tone.Transport.start(); // Retoma se estava pausado
-                         musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
-                        musicPlaying = true;
-                    }
-                } else {
-                    if (Tone.Transport.state === "started") {
-                        Tone.Transport.pause(); 
-                        musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
-                        musicPlaying = false;
-                    }
+            if (play) {
+                if (pluckSynth && musicSequence && (Tone.Transport.state === "stopped" || Tone.Transport.state === "paused")) {
+                    Tone.Transport.start();
+                    if(musicSequence.state !== "started") musicSequence.start(0); 
+                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
+                    musicPlaying = true;
+                    console.log("Música 'Aquarela' iniciada/retomada.");
                 }
+            } else { // Pause
+                if (Tone.Transport.state === "started") {
+                    Tone.Transport.pause(); 
+                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
+                    musicPlaying = false;
+                    console.log("Música 'Aquarela' pausada.");
+                }
+            }
+        }
+
+        // Tenta tocar a música automaticamente quando a janela carregar
+        window.addEventListener('load', () => {
+            console.log("Janela carregada. Tentando autoplay da música 'Aquarela'...");
+            // Tenta iniciar o contexto de áudio. Se bem-sucedido, a música tocará.
+            // Navegadores podem bloquear isso sem interação prévia.
+            // O timeout dá uma pequena chance para elementos carregarem.
+            setTimeout(() => controlMusicPlayback(true), 500); 
+        });
+        
+        // Event listener para o botão de toggle
+        if (musicToggleButton) {
+            musicToggleButton.addEventListener('click', () => {
+                controlMusicPlayback(!musicPlaying); // Inverte o estado atual
             });
         }
+
+        // Adiciona um listener para a primeira interação do usuário na página
+        // para tentar iniciar o contexto de áudio se o autoplay no load falhar.
+        function handleFirstUserInteraction() {
+            if (!audioContextUserInteracted && Tone.context.state !== 'running') {
+                console.log("Primeira interação do usuário detectada, tentando iniciar o áudio se necessário.");
+                controlMusicPlayback(musicPlaying); // Tenta manter o estado desejado ou iniciar se era pra tocar
+            }
+            // Remove o listener após a primeira interação para não disparar múltiplas vezes
+            document.body.removeEventListener('click', handleFirstUserInteraction, true);
+            document.body.removeEventListener('keydown', handleFirstUserInteraction, true);
+        }
+        document.body.addEventListener('click', handleFirstUserInteraction, true);
+        document.body.addEventListener('keydown', handleFirstUserInteraction, true);
+
     </script>
 </body>
 </html>
-
