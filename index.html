@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* Animação do Gradiente para o Background da Página */
         @keyframes animatedPageBackground {
@@ -289,23 +290,7 @@
         </div>
     </footer>
     
-    <audio id="backgroundMusicPlayer" loop>
-        <!-- 
-            CORREÇÃO: Alinhando o src com o erro 404 do console do usuário.
-            O usuário precisa garantir que o arquivo 'musi_ntal_aquarela.mp3' exista na raiz do repositório 'filira-creative'.
-            Se o repositório for SEU_USUARIO.github.io/filira-creative/, o caminho relativo correto
-            a partir do index.html (na raiz) para um arquivo na raiz é apenas o nome do arquivo.
-            Se o arquivo estiver em uma pasta 'musica', o src seria 'musica/musi_ntal_aquarela.mp3'.
-            Assumindo que o arquivo está na raiz do repositório, conforme o erro 404.
-        -->
-        <source src="musi_ntal_aquarela.mp3" type="audio/mpeg">
-        <!-- 
-            Fallback para o nome original, caso o usuário prefira manter este e corrigir o local/nome no GitHub.
-            Lembre-se de que o type="audio/mp4" não é ideal para a tag <audio>.
-            <source src="musica/Aquarela - Toquinho (Cover Instrumental por Breno Monteiro).mp4" type="audio/mp4">
-        -->
-        Seu navegador não suporta o elemento de áudio.
-    </audio>
+    <!-- O player de áudio HTML5 foi removido -->
 
     <button id="musicToggleButton" title="Tocar/Pausar Música">
         <i class="fas fa-play"></i>
@@ -464,115 +449,148 @@
             });
         }
 
-        // --- Música de Fundo com HTML5 Audio ---
-        const musicPlayer = document.getElementById('backgroundMusicPlayer');
+        // --- Música de Fundo com Tone.js (Estilo Piano - Aquarela) ---
         const musicToggleButton = document.getElementById('musicToggleButton');
         let musicPlaying = false;
+        let pianoSynth, pianoSequence;
+        let audioContextUserInteracted = false; 
 
-        function controlMusicPlayback(play) {
-            if (!musicPlayer) {
-                console.error("Elemento de áudio não encontrado no DOM.");
-                if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro: Player não encontrado"></i>';
-                return;
-            }
-            console.log(`Tentando ${play ? 'tocar' : 'pausar'}. Estado atual do player: ${musicPlayer.paused ? 'pausado' : 'tocando'}. musicPlaying: ${musicPlaying}`);
+        function setupAquarelaPianoMusic() {
+            // PolySynth com FMSynth para um som mais rico, tentando emular um piano suave
+            pianoSynth = new Tone.PolySynth(Tone.FMSynth, {
+                harmonicity: 3.01,
+                modulationIndex: 14,
+                envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.7 },
+                modulation: { type: "sine" },
+                modulationEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.01, release: 0.5 },
+                volume: -18 // Volume mais baixo para música de fundo
+            }).toDestination();
             
+            // Adiciona um pouco de reverb para um som mais espacial
+            const reverb = new Tone.Reverb(1.5).toDestination(); // 1.5 segundos de decay
+            pianoSynth.connect(reverb);
+
+
+            // Melodia de "Aquarela" adaptada para piano (melodia + harmonia simples)
+            // '4n' = semínima, '2n' = mínima, '8n' = colcheia
+            const aquarelaPianoMelody = [
+                // Intro/Tema A (Compassos 1-4)
+                { time: "0:0:0", notes: ["G4", "C4"], duration: "2n" }, // Melodia G4, Harmonia C4
+                { time: "0:2:0", notes: ["E4", "C4"], duration: "2n" },
+                { time: "1:0:0", notes: ["C4", "G3"], duration: "2n" },
+                { time: "1:2:0", notes: ["D4", "G3"], duration: "4n" },
+                { time: "1:3:0", notes: ["E4", "C4"], duration: "4n" },
+
+                { time: "2:0:0", notes: ["G4", "C4"], duration: "2n" },
+                { time: "2:2:0", notes: ["E4", "C4"], duration: "2n" },
+                { time: "3:0:0", notes: ["C4", "G3"], duration: "2n" },
+                { time: "3:2:0", notes: ["A3", "F3"], duration: "2n" },
+
+                // Tema B (Compassos 5-8)
+                { time: "4:0:0", notes: ["C5", "F4"], duration: "4n" },
+                { time: "4:1:0", notes: ["B4", "G4"], duration: "4n" },
+                { time: "4:2:0", notes: ["A4", "F4"], duration: "2n" },
+                { time: "5:0:0", notes: ["G4", "C4"], duration: "2n" },
+                { time: "5:2:0", notes: ["F4", "D4"], duration: "4n" },
+                { time: "5:3:0", notes: ["E4", "C4"], duration: "4n" },
+                
+                { time: "6:0:0", notes: ["D4", "G3"], duration: "2n" },
+                { time: "6:2:0", notes: ["C4", "G3"], duration: "1m" }, // Finaliza a frase
+
+                // Variação/Ponte (Compassos 9-12)
+                { time: "8:0:0", notes: ["G3", "C3"], duration: "2n"}, 
+                { time: "8:2:0", notes: ["B3", "G3"], duration: "2n"},
+                { time: "9:0:0", notes: ["D4", "A3"], duration: "2n"},
+                { time: "9:2:0", notes: ["G4", "B3"], duration: "2n"},
+
+                { time: "10:0:0", notes: ["C4", "F3"], duration: "2n"},
+                { time: "10:2:0", notes: ["E4", "C4"], duration: "2n"},
+                { time: "11:0:0", notes: ["G4", "D4"], duration: "2n"},
+                { time: "11:2:0", notes: ["C5", "E4"], duration: "2n"},
+
+                // Finalização suave (Compassos 13-14)
+                { time: "12:0:0", notes: ["B4", "G4"], duration: "4n"},
+                { time: "12:1:0", notes: ["A4", "F4"], duration: "4n"},
+                { time: "12:2:0", notes: ["G4", "E4"], duration: "2n"},
+                { time: "13:0:0", notes: ["E4", "C4"], duration: "1m"},
+            ];
+
+            pianoSequence = new Tone.Part((time, value) => {
+                // value.notes é um array de notas para tocar simultaneamente (acorde)
+                pianoSynth.triggerAttackRelease(value.notes, value.duration || "8n", time);
+            }, aquarelaPianoMelody);
+            
+            pianoSequence.loop = true; 
+            pianoSequence.loopEnd = '14m'; 
+            Tone.Transport.bpm.value = 70; // Ritmo calmo e inspirador
+            console.log("Configuração da música 'Aquarela' (estilo piano) concluída.");
+        }
+
+        async function controlMusicPlayback(play) {
+            if (!audioContextUserInteracted && Tone.context.state !== 'running') {
+                try {
+                    await Tone.start(); 
+                    console.log('Contexto de áudio iniciado.');
+                    audioContextUserInteracted = true; 
+                    if (!pianoSynth) { 
+                        setupAquarelaPianoMusic();
+                    }
+                } catch (e) {
+                    console.error("Erro ao iniciar o contexto de áudio do Tone.js:", e);
+                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro no áudio"></i>';
+                    return; 
+                }
+            } else if (!pianoSynth && audioContextUserInteracted) { 
+                 // Se o contexto já iniciou (ex: por outra interação), mas a música não foi configurada
+                 setupAquarelaPianoMusic();
+            }
+
+
             if (play) {
-                const playPromise = musicPlayer.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(_ => {
-                        if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
-                        musicPlaying = true;
-                        console.log("Música iniciada com sucesso pelo script.");
-                    }).catch(error => {
-                        console.error("Erro ao tentar tocar música (autoplay bloqueado ou outro erro):", error.name, error.message);
-                        if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
-                        musicPlaying = false;
-                        // Se for NotAllowedError, é provável que o autoplay tenha sido bloqueado.
-                        // A lógica de handleFirstUserInteractionForMusic tentará novamente na interação.
-                    });
+                if (pianoSynth && pianoSequence && (Tone.Transport.state === "stopped" || Tone.Transport.state === "paused")) {
+                    Tone.Transport.start();
+                    if(pianoSequence.state !== "started") pianoSequence.start(0); 
+                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
+                    musicPlaying = true;
+                    console.log("Música 'Aquarela' (piano) iniciada/retomada.");
                 }
             } else { 
-                musicPlayer.pause();
-                if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
-                musicPlaying = false;
-                console.log("Música pausada pelo script.");
+                if (Tone.Transport.state === "started") {
+                    Tone.Transport.pause(); 
+                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
+                    musicPlaying = false;
+                    console.log("Música 'Aquarela' (piano) pausada.");
+                }
             }
-        }
-        
-        if (musicPlayer) {
-            console.log("Player de música encontrado:", musicPlayer);
-            console.log("Fonte do áudio:", musicPlayer.currentSrc || musicPlayer.querySelector('source')?.src);
-
-            musicPlayer.addEventListener('error', (e) => {
-                let errorMsg = "Erro desconhecido no elemento de áudio.";
-                if (musicPlayer.error) {
-                    switch (musicPlayer.error.code) {
-                        case MediaError.MEDIA_ERR_ABORTED:
-                            errorMsg = 'Reprodução de áudio abortada.';
-                            break;
-                        case MediaError.MEDIA_ERR_NETWORK:
-                            errorMsg = 'Erro de rede ao carregar o áudio.';
-                            break;
-                        case MediaError.MEDIA_ERR_DECODE:
-                            errorMsg = 'Erro ao decodificar o áudio.';
-                            break;
-                        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                            errorMsg = 'Formato de áudio não suportado ou fonte não encontrada.';
-                            break;
-                        default:
-                            errorMsg = 'Ocorreu um erro com o áudio.';
-                    }
-                }
-                console.error("Erro no elemento de áudio:", errorMsg, e);
-                if (musicToggleButton) {
-                    musicToggleButton.innerHTML = `<i class="fas fa-exclamation-circle" title="${errorMsg}"></i>`;
-                }
-            });
-             musicPlayer.addEventListener('canplaythrough', () => {
-                console.log("Áudio pode ser tocado completamente (canplaythrough).");
-            }, { once: true });
-            musicPlayer.addEventListener('loadedmetadata', () => {
-                console.log("Metadados do áudio carregados. Duração:", musicPlayer.duration);
-            }, { once: true });
-
-        } else {
-            console.error("Elemento de áudio #backgroundMusicPlayer não foi encontrado no DOM ao adicionar listeners.");
         }
 
         window.addEventListener('load', () => {
-            console.log("Janela carregada. Tentando autoplay da música...");
-            if (musicPlayer) {
-                musicPlayer.volume = 0.3; 
-                setTimeout(() => controlMusicPlayback(true), 700); // Aumentei um pouco o timeout
-            } else {
-                console.error("Player de música não encontrado no evento 'load' da página.");
-            }
+            console.log("Janela carregada. Tentando autoplay da música 'Aquarela' (piano)...");
+            setTimeout(() => controlMusicPlayback(true), 700); 
         });
         
         if (musicToggleButton) {
             musicToggleButton.addEventListener('click', () => {
-                console.log("Botão de música clicado. Estado atual de musicPlaying antes do toggle:", musicPlaying);
                 controlMusicPlayback(!musicPlaying); 
             });
         }
 
-        let firstInteractionDone = false;
+        let firstInteractionDoneForMusic = false;
         function handleFirstUserInteractionForMusic() {
-            if (firstInteractionDone) return; // Executa apenas uma vez
+            if (firstInteractionDoneForMusic) return; 
 
-            if (musicPlayer && !musicPlaying && musicPlayer.paused) { 
-                console.log("Primeira interação do usuário detectada (click/keydown/scroll), tentando iniciar a música se o autoplay falhou.");
+            if (Tone.context.state !== 'running'){ // Se o contexto não iniciou, tenta iniciar
+                 controlMusicPlayback(true); // Tenta iniciar o áudio e tocar
+            } else if (pianoSynth && !musicPlaying && Tone.Transport.state !== 'started') {
+                // Se o contexto iniciou mas a música não está tocando
                 controlMusicPlayback(true);
             }
-            firstInteractionDone = true; // Marca que a primeira interação já ocorreu
-            // Remove os listeners após a primeira tentativa para não interferir depois
+            firstInteractionDoneForMusic = true; 
             document.body.removeEventListener('click', handleFirstUserInteractionForMusic, true);
             document.body.removeEventListener('keydown', handleFirstUserInteractionForMusic, true);
             document.body.removeEventListener('scroll', handleFirstUserInteractionForMusic, true);
         }
 
-        // Adiciona listeners para diferentes tipos de interação
         document.body.addEventListener('click', handleFirstUserInteractionForMusic, true);
         document.body.addEventListener('keydown', handleFirstUserInteractionForMusic, true);
         document.body.addEventListener('scroll', handleFirstUserInteractionForMusic, true);
