@@ -408,22 +408,39 @@
                     const result = await response.json();
                     if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0 && result.candidates[0].content.parts[0].text) {
                         const jsonResponseText = result.candidates[0].content.parts[0].text;
-                        const parsedJson = JSON.parse(jsonResponseText);
-                        let htmlOutput = `<h4 class="font-semibold text-purple-600 mb-2">${parsedJson.paletteName || 'Paleta Sugerida'}:</h4>`;
-                        htmlOutput += '<div class="flex flex-wrap justify-center mb-2 color-palette">';
-                        parsedJson.colors.forEach(color => { htmlOutput += `<div style="background-color: ${color.hex};" title="${color.name} (${color.hex})"></div>`; });
-                        htmlOutput += '</div>';
-                        htmlOutput += '<ul class="list-disc list-inside">';
-                        parsedJson.colors.forEach(color => { htmlOutput += `<li>${color.name}: <span class="font-mono">${color.hex}</span></li>`; });
-                        htmlOutput += '</ul>';
-                        colorsResultDiv.innerHTML = htmlOutput;
+                        try {
+                            const parsedJson = JSON.parse(jsonResponseText);
+                            let htmlOutput = `<h4 class="font-semibold text-purple-600 mb-2">${parsedJson.paletteName || 'Paleta Sugerida'}:</h4>`;
+                            htmlOutput += '<div class="flex flex-wrap justify-center mb-2 color-palette">';
+                            if (parsedJson.colors && Array.isArray(parsedJson.colors)) {
+                                parsedJson.colors.forEach(color => { 
+                                    if(color && color.hex && color.name) { // Verifica se color, color.hex e color.name existem
+                                        htmlOutput += `<div style="background-color: ${color.hex};" title="${color.name} (${color.hex})"></div>`;
+                                    }
+                                });
+                            }
+                            htmlOutput += '</div>';
+                            htmlOutput += '<ul class="list-disc list-inside">';
+                            if (parsedJson.colors && Array.isArray(parsedJson.colors)) {
+                                parsedJson.colors.forEach(color => { 
+                                     if(color && color.hex && color.name) { // Verifica se color, color.hex e color.name existem
+                                        htmlOutput += `<li>${color.name}: <span class="font-mono">${color.hex}</span></li>`;
+                                     }
+                                });
+                            }
+                            htmlOutput += '</ul>';
+                            colorsResultDiv.innerHTML = htmlOutput;
+                        } catch (parseError) {
+                            console.error('Erro ao fazer parse da resposta JSON de cores:', parseError, "\nTexto recebido:", jsonResponseText);
+                            colorsResultDiv.innerHTML = '<p class="text-red-500">A resposta da API de cores não pôde ser processada. Tente novamente.</p>';
+                        }
                     } else {
                         colorsResultDiv.innerHTML = '<p class="text-red-500">Não foi possível gerar a paleta de cores. Tente novamente.</p>';
-                        console.error('Resposta inesperada da API de cores:', result);
+                        console.error('Resposta inesperada da API de cores (sem candidates válidos):', result);
                     }
                 } catch (error) {
                     console.error('Erro ao gerar paleta de cores:', error);
-                    colorsResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro: ${error.message}. Verifique o console para mais detalhes.</p>`;
+                    colorsResultDiv.innerHTML = `<p class="text-red-500">Ocorreu um erro ao buscar cores: ${error.message}.</p>`;
                 } finally {
                     colorsLoader.classList.add('hidden');
                 }
@@ -435,74 +452,63 @@
         let musicPlaying = false;
         let synth, sequence;
 
-        // Inicializa o sintetizador e a melodia
         function setupMusic() {
-            // Um sintetizador suave
             synth = new Tone.Synth({
-                oscillator: { type: 'sine' }, // 'sine', 'triangle', 'sawtooth', 'square'
-                envelope: {
-                    attack: 0.1,
-                    decay: 0.2,
-                    sustain: 0.3,
-                    release: 1
-                },
-                volume: -12 // Volume mais baixo para música de fundo
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.1, decay: 0.2, sustain: 0.3, release: 1 },
+                volume: -12 
             }).toDestination();
-
-            // Uma melodia simples e calma no estilo "Aquarela" (tons suaves)
-            // Escala de Dó Maior: C4, D4, E4, F4, G4, A4, B4, C5
             const melody = [
-                { time: '0:0', note: 'C4', duration: '4n' },
-                { time: '0:2', note: 'E4', duration: '4n' },
-                { time: '1:0', note: 'G4', duration: '2n' },
-                { time: '1:2', note: 'E4', duration: '4n'},
-                { time: '2:0', note: 'D4', duration: '4n' },
-                { time: '2:2', note: 'F4', duration: '4n' },
-                { time: '3:0', note: 'E4', duration: '2n' },
-                { time: '3:2', note: 'C4', duration: '4n' },
-
-                { time: '4:0', note: 'G3', duration: '4n' },
-                { time: '4:2', note: 'B3', duration: '4n' },
-                { time: '5:0', note: 'D4', duration: '2n' },
-                { time: '5:2', note: 'B3', duration: '4n'},
-                { time: '6:0', note: 'A3', duration: '4n' },
-                { time: '6:2', note: 'C4', duration: '4n' },
-                { time: '7:0', note: 'B3', duration: '2n' },
-                { time: '7:2', note: 'G3', duration: '4n' }
+                { time: '0:0', note: 'C4', duration: '4n' }, { time: '0:2', note: 'E4', duration: '4n' },
+                { time: '1:0', note: 'G4', duration: '2n' }, { time: '1:2', note: 'E4', duration: '4n'},
+                { time: '2:0', note: 'D4', duration: '4n' }, { time: '2:2', note: 'F4', duration: '4n' },
+                { time: '3:0', note: 'E4', duration: '2n' }, { time: '3:2', note: 'C4', duration: '4n' },
+                { time: '4:0', note: 'G3', duration: '4n' }, { time: '4:2', note: 'B3', duration: '4n' },
+                { time: '5:0', note: 'D4', duration: '2n' }, { time: '5:2', note: 'B3', duration: '4n'},
+                { time: '6:0', note: 'A3', duration: '4n' }, { time: '6:2', note: 'C4', duration: '4n' },
+                { time: '7:0', note: 'B3', duration: '2n' }, { time: '7:2', note: 'G3', duration: '4n' }
             ];
-
             sequence = new Tone.Part((time, value) => {
                 synth.triggerAttackRelease(value.note, value.duration, time);
             }, melody);
-            
-            sequence.loop = true; // Faz a melodia tocar em loop
-            sequence.loopEnd = '8m'; // Duração do loop (8 compassos)
-            Tone.Transport.bpm.value = 80; // Tempo calmo
+            sequence.loop = true; 
+            sequence.loopEnd = '8m'; 
+            Tone.Transport.bpm.value = 80; 
         }
-
 
         if (musicToggleButton) {
             musicToggleButton.addEventListener('click', async () => {
                 if (Tone.context.state !== 'running') {
-                    // Inicia o contexto de áudio do Tone.js (necessário em navegadores modernos)
-                    // Isso geralmente requer uma interação do usuário (como um clique)
-                    await Tone.start(); 
-                    console.log('Contexto de áudio iniciado.');
-                    if (!synth) { // Configura a música apenas uma vez
-                         setupMusic();
+                    try {
+                        await Tone.start(); 
+                        console.log('Contexto de áudio iniciado.');
+                        if (!synth) { 
+                             setupMusic();
+                        }
+                    } catch (e) {
+                        console.error("Erro ao iniciar o contexto de áudio do Tone.js:", e);
+                        musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle"></i>'; // Indica erro
+                        return; 
                     }
                 }
 
                 if (!musicPlaying) {
-                    Tone.Transport.start();
-                    sequence.start(0); // Inicia a sequência
-                    musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
-                    musicPlaying = true;
+                    if (synth && sequence && Tone.Transport.state !== "started") { // Garante que está tudo configurado
+                        Tone.Transport.start();
+                        sequence.start(0); 
+                        musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
+                        musicPlaying = true;
+                    } else if (synth && sequence && Tone.Transport.state === "paused") {
+                        Tone.Transport.start(); // Retoma se estava pausado
+                         musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
+                        musicPlaying = true;
+                    }
                 } else {
-                    Tone.Transport.pause(); // Pausa a música, mas não para completamente
-                    // Para parar e resetar: Tone.Transport.stop(); sequence.stop();
-                    musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
-                    musicPlaying = false;
+                    if (Tone.Transport.state === "started") {
+                        Tone.Transport.pause(); 
+                        musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
+                        musicPlaying = false;
+                    }
                 }
             });
         }
