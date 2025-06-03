@@ -290,13 +290,20 @@
     </footer>
     
     <audio id="backgroundMusicPlayer" loop>
-        <!-- IMPORTANTE: Verifique se o arquivo 'Aquarela - Toquinho (Cover Instrumental por Breno Monteiro).mp4' 
-             é um arquivo de ÁUDIO (ex: MP3 renomeado para .mp4) ou um VÍDEO.
-             Para a tag <audio>, o ideal é usar um formato de áudio como MP3.
-             Se for um MP4 de vídeo, o type="audio/mp4" é mais correto, mas a compatibilidade pode variar.
-             Recomenda-se usar um arquivo .mp3 e type="audio/mpeg".
+        <!-- 
+            CORREÇÃO: Alinhando o src com o erro 404 do console do usuário.
+            O usuário precisa garantir que o arquivo 'musi_ntal_aquarela.mp3' exista na raiz do repositório 'filira-creative'.
+            Se o repositório for SEU_USUARIO.github.io/filira-creative/, o caminho relativo correto
+            a partir do index.html (na raiz) para um arquivo na raiz é apenas o nome do arquivo.
+            Se o arquivo estiver em uma pasta 'musica', o src seria 'musica/musi_ntal_aquarela.mp3'.
+            Assumindo que o arquivo está na raiz do repositório, conforme o erro 404.
         -->
-        <source src="musica/Aquarela - Toquinho (Cover Instrumental por Breno Monteiro).mp4" type="audio/mp4">
+        <source src="musi_ntal_aquarela.mp3" type="audio/mpeg">
+        <!-- 
+            Fallback para o nome original, caso o usuário prefira manter este e corrigir o local/nome no GitHub.
+            Lembre-se de que o type="audio/mp4" não é ideal para a tag <audio>.
+            <source src="musica/Aquarela - Toquinho (Cover Instrumental por Breno Monteiro).mp4" type="audio/mp4">
+        -->
         Seu navegador não suporta o elemento de áudio.
     </audio>
 
@@ -464,74 +471,108 @@
 
         function controlMusicPlayback(play) {
             if (!musicPlayer) {
-                console.error("Elemento de áudio não encontrado.");
+                console.error("Elemento de áudio não encontrado no DOM.");
+                if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro: Player não encontrado"></i>';
                 return;
             }
+            console.log(`Tentando ${play ? 'tocar' : 'pausar'}. Estado atual do player: ${musicPlayer.paused ? 'pausado' : 'tocando'}. musicPlaying: ${musicPlaying}`);
+            
             if (play) {
-                console.log("Tentando tocar a música...");
                 const playPromise = musicPlayer.play();
                 if (playPromise !== undefined) {
                     playPromise.then(_ => {
                         if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
                         musicPlaying = true;
-                        console.log("Música iniciada com sucesso.");
+                        console.log("Música iniciada com sucesso pelo script.");
                     }).catch(error => {
-                        console.error("Erro ao tentar tocar música (autoplay bloqueado ou outro erro):", error);
+                        console.error("Erro ao tentar tocar música (autoplay bloqueado ou outro erro):", error.name, error.message);
                         if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
                         musicPlaying = false;
+                        // Se for NotAllowedError, é provável que o autoplay tenha sido bloqueado.
+                        // A lógica de handleFirstUserInteractionForMusic tentará novamente na interação.
                     });
                 }
-            } else { // Pausar
+            } else { 
                 musicPlayer.pause();
                 if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
                 musicPlaying = false;
-                console.log("Música pausada.");
+                console.log("Música pausada pelo script.");
             }
         }
         
         if (musicPlayer) {
+            console.log("Player de música encontrado:", musicPlayer);
+            console.log("Fonte do áudio:", musicPlayer.currentSrc || musicPlayer.querySelector('source')?.src);
+
             musicPlayer.addEventListener('error', (e) => {
-                console.error("Erro no elemento de áudio:", e);
+                let errorMsg = "Erro desconhecido no elemento de áudio.";
+                if (musicPlayer.error) {
+                    switch (musicPlayer.error.code) {
+                        case MediaError.MEDIA_ERR_ABORTED:
+                            errorMsg = 'Reprodução de áudio abortada.';
+                            break;
+                        case MediaError.MEDIA_ERR_NETWORK:
+                            errorMsg = 'Erro de rede ao carregar o áudio.';
+                            break;
+                        case MediaError.MEDIA_ERR_DECODE:
+                            errorMsg = 'Erro ao decodificar o áudio.';
+                            break;
+                        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                            errorMsg = 'Formato de áudio não suportado ou fonte não encontrada.';
+                            break;
+                        default:
+                            errorMsg = 'Ocorreu um erro com o áudio.';
+                    }
+                }
+                console.error("Erro no elemento de áudio:", errorMsg, e);
                 if (musicToggleButton) {
-                    musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro ao carregar música"></i>';
+                    musicToggleButton.innerHTML = `<i class="fas fa-exclamation-circle" title="${errorMsg}"></i>`;
                 }
             });
              musicPlayer.addEventListener('canplaythrough', () => {
-                console.log("Áudio pode ser tocado completamente.");
-                // Se o autoplay no 'load' falhou, e o usuário interagir, a música poderá tocar.
+                console.log("Áudio pode ser tocado completamente (canplaythrough).");
             }, { once: true });
-        }
+            musicPlayer.addEventListener('loadedmetadata', () => {
+                console.log("Metadados do áudio carregados. Duração:", musicPlayer.duration);
+            }, { once: true });
 
+        } else {
+            console.error("Elemento de áudio #backgroundMusicPlayer não foi encontrado no DOM ao adicionar listeners.");
+        }
 
         window.addEventListener('load', () => {
             console.log("Janela carregada. Tentando autoplay da música...");
             if (musicPlayer) {
                 musicPlayer.volume = 0.3; 
-                // O autoplay é tentado aqui. O navegador pode bloquear.
-                // A interação do usuário subsequente pode desbloqueá-lo.
-                setTimeout(() => controlMusicPlayback(true), 500); 
+                setTimeout(() => controlMusicPlayback(true), 700); // Aumentei um pouco o timeout
             } else {
-                console.error("Player de música não encontrado no carregamento da página.");
+                console.error("Player de música não encontrado no evento 'load' da página.");
             }
         });
         
         if (musicToggleButton) {
             musicToggleButton.addEventListener('click', () => {
-                console.log("Botão de música clicado. Estado atual de musicPlaying:", musicPlaying);
+                console.log("Botão de música clicado. Estado atual de musicPlaying antes do toggle:", musicPlaying);
                 controlMusicPlayback(!musicPlaying); 
             });
         }
 
+        let firstInteractionDone = false;
         function handleFirstUserInteractionForMusic() {
+            if (firstInteractionDone) return; // Executa apenas uma vez
+
             if (musicPlayer && !musicPlaying && musicPlayer.paused) { 
-                console.log("Primeira interação do usuário detectada, tentando iniciar a música se o autoplay falhou.");
+                console.log("Primeira interação do usuário detectada (click/keydown/scroll), tentando iniciar a música se o autoplay falhou.");
                 controlMusicPlayback(true);
             }
+            firstInteractionDone = true; // Marca que a primeira interação já ocorreu
+            // Remove os listeners após a primeira tentativa para não interferir depois
             document.body.removeEventListener('click', handleFirstUserInteractionForMusic, true);
             document.body.removeEventListener('keydown', handleFirstUserInteractionForMusic, true);
             document.body.removeEventListener('scroll', handleFirstUserInteractionForMusic, true);
         }
 
+        // Adiciona listeners para diferentes tipos de interação
         document.body.addEventListener('click', handleFirstUserInteractionForMusic, true);
         document.body.addEventListener('keydown', handleFirstUserInteractionForMusic, true);
         document.body.addEventListener('scroll', handleFirstUserInteractionForMusic, true);
