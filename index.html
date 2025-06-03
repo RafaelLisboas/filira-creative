@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Tone.js foi removido, pois usaremos a tag <audio> do HTML5 -->
     <style>
         /* Animação do Gradiente para o Background da Página */
         @keyframes animatedPageBackground {
@@ -290,10 +289,14 @@
         </div>
     </footer>
     
-    <!-- Player de Áudio HTML5 (oculto) -->
-    <!-- IMPORTANTE: Substitua 'musica/instrumental_aquarela.mp3' pelo caminho real do seu arquivo de música -->
     <audio id="backgroundMusicPlayer" loop>
-        <source src="musica/instrumental_aquarela.mp3" type="audio/mpeg">
+        <!-- IMPORTANTE: Verifique se o arquivo 'Aquarela - Toquinho (Cover Instrumental por Breno Monteiro).mp4' 
+             é um arquivo de ÁUDIO (ex: MP3 renomeado para .mp4) ou um VÍDEO.
+             Para a tag <audio>, o ideal é usar um formato de áudio como MP3.
+             Se for um MP4 de vídeo, o type="audio/mp4" é mais correto, mas a compatibilidade pode variar.
+             Recomenda-se usar um arquivo .mp3 e type="audio/mpeg".
+        -->
+        <source src="musica/Aquarela - Toquinho (Cover Instrumental por Breno Monteiro).mp4" type="audio/mp4">
         Seu navegador não suporta o elemento de áudio.
     </audio>
 
@@ -460,19 +463,21 @@
         let musicPlaying = false;
 
         function controlMusicPlayback(play) {
+            if (!musicPlayer) {
+                console.error("Elemento de áudio não encontrado.");
+                return;
+            }
             if (play) {
-                // Tenta tocar a música. O navegador pode bloquear se não houver interação do usuário.
+                console.log("Tentando tocar a música...");
                 const playPromise = musicPlayer.play();
                 if (playPromise !== undefined) {
                     playPromise.then(_ => {
-                        // Autoplay iniciado ou play bem-sucedido
                         if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
                         musicPlaying = true;
-                        console.log("Música iniciada.");
+                        console.log("Música iniciada com sucesso.");
                     }).catch(error => {
-                        // Autoplay foi bloqueado ou outro erro.
-                        console.error("Erro ao tentar tocar música:", error);
-                        if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>'; // Mantém o ícone de play
+                        console.error("Erro ao tentar tocar música (autoplay bloqueado ou outro erro):", error);
+                        if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
                         musicPlaying = false;
                     });
                 }
@@ -483,40 +488,53 @@
                 console.log("Música pausada.");
             }
         }
+        
+        if (musicPlayer) {
+            musicPlayer.addEventListener('error', (e) => {
+                console.error("Erro no elemento de áudio:", e);
+                if (musicToggleButton) {
+                    musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro ao carregar música"></i>';
+                }
+            });
+             musicPlayer.addEventListener('canplaythrough', () => {
+                console.log("Áudio pode ser tocado completamente.");
+                // Se o autoplay no 'load' falhou, e o usuário interagir, a música poderá tocar.
+            }, { once: true });
+        }
 
-        // Tenta tocar a música automaticamente quando a janela carregar
+
         window.addEventListener('load', () => {
             console.log("Janela carregada. Tentando autoplay da música...");
-             // Define o volume para um nível mais baixo para música de fundo
-            musicPlayer.volume = 0.3; // Valor entre 0.0 e 1.0
-            setTimeout(() => controlMusicPlayback(true), 500); 
+            if (musicPlayer) {
+                musicPlayer.volume = 0.3; 
+                // O autoplay é tentado aqui. O navegador pode bloquear.
+                // A interação do usuário subsequente pode desbloqueá-lo.
+                setTimeout(() => controlMusicPlayback(true), 500); 
+            } else {
+                console.error("Player de música não encontrado no carregamento da página.");
+            }
         });
         
-        // Event listener para o botão de toggle
         if (musicToggleButton) {
             musicToggleButton.addEventListener('click', () => {
-                controlMusicPlayback(!musicPlaying); // Inverte o estado atual
+                console.log("Botão de música clicado. Estado atual de musicPlaying:", musicPlaying);
+                controlMusicPlayback(!musicPlaying); 
             });
         }
 
-         // Listener para tentar iniciar a música na primeira interação do usuário,
-         // caso o autoplay no 'load' tenha sido bloqueado.
         function handleFirstUserInteractionForMusic() {
-            if (!musicPlaying && musicPlayer.paused) { // Se a música não estiver tocando e estiver pausada
+            if (musicPlayer && !musicPlaying && musicPlayer.paused) { 
                 console.log("Primeira interação do usuário detectada, tentando iniciar a música se o autoplay falhou.");
                 controlMusicPlayback(true);
             }
-            // Remove os listeners após a primeira tentativa para não interferir depois
             document.body.removeEventListener('click', handleFirstUserInteractionForMusic, true);
             document.body.removeEventListener('keydown', handleFirstUserInteractionForMusic, true);
             document.body.removeEventListener('scroll', handleFirstUserInteractionForMusic, true);
         }
 
-        // Adiciona listeners para diferentes tipos de interação
         document.body.addEventListener('click', handleFirstUserInteractionForMusic, true);
         document.body.addEventListener('keydown', handleFirstUserInteractionForMusic, true);
         document.body.addEventListener('scroll', handleFirstUserInteractionForMusic, true);
-
 
     </script>
 </body>
