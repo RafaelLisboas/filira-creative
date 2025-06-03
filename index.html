@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Tone.js foi removido, pois usaremos a tag <audio> do HTML5 -->
     <style>
         /* Animação do Gradiente para o Background da Página */
         @keyframes animatedPageBackground {
@@ -289,6 +289,13 @@
             <p class="text-gray-500 text-sm">Feito com <i class="fas fa-heart text-pink-400"></i> para inspirar sua criatividade.</p>
         </div>
     </footer>
+    
+    <!-- Player de Áudio HTML5 (oculto) -->
+    <!-- IMPORTANTE: Substitua 'musica/instrumental_aquarela.mp3' pelo caminho real do seu arquivo de música -->
+    <audio id="backgroundMusicPlayer" loop>
+        <source src="musica/instrumental_aquarela.mp3" type="audio/mpeg">
+        Seu navegador não suporta o elemento de áudio.
+    </audio>
 
     <button id="musicToggleButton" title="Tocar/Pausar Música">
         <i class="fas fa-play"></i>
@@ -447,119 +454,41 @@
             });
         }
 
-        // --- Música de Fundo com Tone.js ---
+        // --- Música de Fundo com HTML5 Audio ---
+        const musicPlayer = document.getElementById('backgroundMusicPlayer');
         const musicToggleButton = document.getElementById('musicToggleButton');
         let musicPlaying = false;
-        let pluckSynth, musicSequence; // Renomeado para clareza
-        let audioContextUserInteracted = false; 
 
-        function setupAquarelaMusic() {
-            // PluckSynth para um som que lembra violão
-            pluckSynth = new Tone.PluckSynth({
-                attackNoise: 0.5, // Um pouco de ruído no ataque para simular o "pluck"
-                dampening: 4000,   // Amortecimento das cordas (ajuste para sustain)
-                resonance: 0.7,   // Ressonância do corpo do instrumento
-                volume: -14       // Volume mais baixo para música de fundo
-            }).toDestination();
-
-            // Melodia inspirada em "Aquarela" - simplificada para PluckSynth
-            // Foco nas frases melódicas principais e harmonias simples
-            // As notas são representadas como [tempo, nota, duraçãoOpcional]
-            // '4n' = semínima, '2n' = mínima, '1m' = compasso inteiro
-            const aquarelaMelody = [
-                // Introdução / Tema A (Numa folha qualquer...)
-                { time: "0:0:0", note: "G4", duration: "2n" },
-                { time: "0:2:0", note: "E4", duration: "2n" },
-                { time: "1:0:0", note: "C4", duration: "2n" },
-                { time: "1:2:0", note: "D4", duration: "4n" },
-                { time: "1:3:0", note: "E4", duration: "4n" },
-
-                { time: "2:0:0", note: "G4", duration: "2n" },
-                { time: "2:2:0", note: "E4", duration: "2n" },
-                { time: "3:0:0", note: "C4", duration: "2n" },
-                { time: "3:2:0", note: "A3", duration: "2n" }, // Harmonia simples
-
-                // Tema B (E com cinco ou seis retas...)
-                { time: "4:0:0", note: "C5", duration: "4n" },
-                { time: "4:1:0", note: "B4", duration: "4n" },
-                { time: "4:2:0", note: "A4", duration: "2n" },
-                { time: "5:0:0", note: "G4", duration: "2n" },
-                { time: "5:2:0", note: "F4", duration: "4n" }, // Adicionando F# se quiser Gmaj7
-                { time: "5:3:0", note: "E4", duration: "4n" },
-                
-                { time: "6:0:0", note: "D4", duration: "2n" },
-                { time: "6:2:0", note: "C4", duration: "1m" }, // Finaliza a frase
-
-                // Repetição suave ou variação
-                { time: "8:0:0", note: "G3", duration: "2n"}, // Base harmônica
-                { time: "8:2:0", note: "B3", duration: "2n"},
-                { time: "9:0:0", note: "D4", duration: "2n"},
-                { time: "9:2:0", note: "G4", duration: "2n"},
-
-                { time: "10:0:0", note: "C4", duration: "2n"},
-                { time: "10:2:0", note: "E4", duration: "2n"},
-                { time: "11:0:0", note: "G4", duration: "2n"},
-                { time: "11:2:0", note: "C5", duration: "2n"},
-
-                { time: "12:0:0", note: "B4", duration: "4n"},
-                { time: "12:1:0", note: "A4", duration: "4n"},
-                { time: "12:2:0", note: "G4", duration: "2n"},
-                { time: "13:0:0", note: "E4", duration: "1m"},
-            ];
-
-            musicSequence = new Tone.Part((time, value) => {
-                pluckSynth.triggerAttackRelease(value.note, value.duration || "8n", time);
-            }, aquarelaMelody);
-            
-            musicSequence.loop = true; 
-            musicSequence.loopEnd = '14m'; // Ajustado para a duração da nova melodia
-            Tone.Transport.bpm.value = 75; // Um pouco mais rápido para "Aquarela"
-            console.log("Configuração da música 'Aquarela' concluída.");
-        }
-
-        async function controlMusicPlayback(play) {
-            // Garante que o contexto de áudio foi iniciado por uma interação do usuário
-            if (!audioContextUserInteracted && Tone.context.state !== 'running') {
-                try {
-                    await Tone.start(); 
-                    console.log('Contexto de áudio iniciado.');
-                    audioContextUserInteracted = true; 
-                    if (!pluckSynth) { 
-                        setupAquarelaMusic();
-                    }
-                } catch (e) {
-                    console.error("Erro ao iniciar o contexto de áudio do Tone.js:", e);
-                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro no áudio"></i>';
-                    return; 
-                }
-            } else if (!pluckSynth) { 
-                 setupAquarelaMusic();
-            }
-
+        function controlMusicPlayback(play) {
             if (play) {
-                if (pluckSynth && musicSequence && (Tone.Transport.state === "stopped" || Tone.Transport.state === "paused")) {
-                    Tone.Transport.start();
-                    if(musicSequence.state !== "started") musicSequence.start(0); 
-                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
-                    musicPlaying = true;
-                    console.log("Música 'Aquarela' iniciada/retomada.");
+                // Tenta tocar a música. O navegador pode bloquear se não houver interação do usuário.
+                const playPromise = musicPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        // Autoplay iniciado ou play bem-sucedido
+                        if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
+                        musicPlaying = true;
+                        console.log("Música iniciada.");
+                    }).catch(error => {
+                        // Autoplay foi bloqueado ou outro erro.
+                        console.error("Erro ao tentar tocar música:", error);
+                        if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>'; // Mantém o ícone de play
+                        musicPlaying = false;
+                    });
                 }
-            } else { // Pause
-                if (Tone.Transport.state === "started") {
-                    Tone.Transport.pause(); 
-                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
-                    musicPlaying = false;
-                    console.log("Música 'Aquarela' pausada.");
-                }
+            } else { // Pausar
+                musicPlayer.pause();
+                if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
+                musicPlaying = false;
+                console.log("Música pausada.");
             }
         }
 
         // Tenta tocar a música automaticamente quando a janela carregar
         window.addEventListener('load', () => {
-            console.log("Janela carregada. Tentando autoplay da música 'Aquarela'...");
-            // Tenta iniciar o contexto de áudio. Se bem-sucedido, a música tocará.
-            // Navegadores podem bloquear isso sem interação prévia.
-            // O timeout dá uma pequena chance para elementos carregarem.
+            console.log("Janela carregada. Tentando autoplay da música...");
+             // Define o volume para um nível mais baixo para música de fundo
+            musicPlayer.volume = 0.3; // Valor entre 0.0 e 1.0
             setTimeout(() => controlMusicPlayback(true), 500); 
         });
         
@@ -570,19 +499,24 @@
             });
         }
 
-        // Adiciona um listener para a primeira interação do usuário na página
-        // para tentar iniciar o contexto de áudio se o autoplay no load falhar.
-        function handleFirstUserInteraction() {
-            if (!audioContextUserInteracted && Tone.context.state !== 'running') {
-                console.log("Primeira interação do usuário detectada, tentando iniciar o áudio se necessário.");
-                controlMusicPlayback(musicPlaying); // Tenta manter o estado desejado ou iniciar se era pra tocar
+         // Listener para tentar iniciar a música na primeira interação do usuário,
+         // caso o autoplay no 'load' tenha sido bloqueado.
+        function handleFirstUserInteractionForMusic() {
+            if (!musicPlaying && musicPlayer.paused) { // Se a música não estiver tocando e estiver pausada
+                console.log("Primeira interação do usuário detectada, tentando iniciar a música se o autoplay falhou.");
+                controlMusicPlayback(true);
             }
-            // Remove o listener após a primeira interação para não disparar múltiplas vezes
-            document.body.removeEventListener('click', handleFirstUserInteraction, true);
-            document.body.removeEventListener('keydown', handleFirstUserInteraction, true);
+            // Remove os listeners após a primeira tentativa para não interferir depois
+            document.body.removeEventListener('click', handleFirstUserInteractionForMusic, true);
+            document.body.removeEventListener('keydown', handleFirstUserInteractionForMusic, true);
+            document.body.removeEventListener('scroll', handleFirstUserInteractionForMusic, true);
         }
-        document.body.addEventListener('click', handleFirstUserInteraction, true);
-        document.body.addEventListener('keydown', handleFirstUserInteraction, true);
+
+        // Adiciona listeners para diferentes tipos de interação
+        document.body.addEventListener('click', handleFirstUserInteractionForMusic, true);
+        document.body.addEventListener('keydown', handleFirstUserInteractionForMusic, true);
+        document.body.addEventListener('scroll', handleFirstUserInteractionForMusic, true);
+
 
     </script>
 </body>
