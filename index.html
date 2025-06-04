@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         /* Animação do Gradiente para o Background da Página */
         @keyframes animatedPageBackground {
@@ -92,9 +91,6 @@
         .color-palette div {
             @apply w-10 h-10 rounded-full shadow-md mx-1;
         }
-        #musicToggleButton {
-            @apply fixed bottom-4 right-4 bg-pink-500 text-white p-3 rounded-full shadow-lg hover:bg-pink-600 transition-colors z-50;
-        }
     </style>
 </head>
 <body>
@@ -109,6 +105,7 @@
                 <a href="#home" class="nav-link active-link">Início</a>
                 <a href="#products" class="nav-link">Produtos</a>
                 <a href="#about" class="nav-link">Sobre Nós</a>
+                <a href="#new-image-section" class="nav-link">Nova Imagem</a> <!-- Link para a nova seção -->
                 <a href="#gemini-features" class="nav-link">Inspiração ✨</a>
                 <a href="#contact" class="nav-link">Contato</a>
             </div>
@@ -122,6 +119,7 @@
             <a href="#home" class="block nav-link text-center py-2">Início</a>
             <a href="#products" class="block nav-link text-center py-2">Produtos</a>
             <a href="#about" class="block nav-link text-center py-2">Sobre Nós</a>
+            <a href="#new-image-section" class="block nav-link text-center py-2">Nova Imagem</a> <!-- Link para a nova seção -->
             <a href="#gemini-features" class="block nav-link text-center py-2">Inspiração ✨</a>
             <a href="#contact" class="block nav-link text-center py-2">Contato</a>
         </div>
@@ -203,6 +201,19 @@
                     <p class="mb-4">Nossa missão é oferecer produtos de alta qualidade que inspirem artistas, estudantes, planejadores e todos que amam o universo da papelaria. Selecionamos cada item com carinho, buscando sempre novidades e tendências para colorir suas ideias.</p>
                     <p>Mais do que uma loja, queremos ser um espaço de inspiração e fomento à criatividade. Explore, crie e divirta-se!</p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nova Seção para Imagem Local -->
+    <section id="new-image-section" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="section-title text-gray-700">Nova Imagem Adicionada</h2>
+            <p class="text-gray-600 mb-8">Aqui está o espaço para a sua imagem local. Lembre-se de ajustar o caminho no código!</p>
+            <div class="max-w-xl mx-auto bg-white p-4 rounded-xl shadow-lg">
+                <!-- Linha para adicionar a sua imagem -->
+                <!-- Substitua 'imagens/sua-imagem-local.jpg' pelo caminho e nome corretos da sua imagem -->
+                <img src="imagens/sua-imagem-local.jpg" alt="imagens/coloque as duas mão dela no rosto e deixa ela com blush no rosto (1).png" class="w-full h-auto rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/FFFFFF?text=Sua+Imagem+Aqui'; this.alt='Erro ao carregar imagem. Verifique o caminho.';">
             </div>
         </div>
     </section>
@@ -290,12 +301,6 @@
         </div>
     </footer>
     
-    <!-- O player de áudio HTML5 foi removido -->
-
-    <button id="musicToggleButton" title="Tocar/Pausar Música">
-        <i class="fas fa-play"></i>
-    </button>
-
     <script>
         // Mobile menu toggle
         const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -338,6 +343,16 @@
                 link.classList.remove('active-link');
                 if (link.getAttribute('href').substring(1) === current) { link.classList.add('active-link'); }
             });
+            // Adicionando verificação para o link "Nova Imagem"
+            const newImageLinkDesktop = document.querySelector('.hidden.md\\:flex a[href="#new-image-section"]');
+            const newImageLinkMobile = document.querySelector('#mobile-menu a[href="#new-image-section"]');
+
+            if (current === 'new-image-section') {
+                if(newImageLinkDesktop) newImageLinkDesktop.classList.add('active-link');
+                if(newImageLinkMobile && newImageLinkMobile.classList.contains('block')) newImageLinkMobile.classList.add('active-link');
+            }
+
+
             if (pageYOffset < sections[0].offsetTop - 70 && current === 'home' ) {
                  document.querySelector('.nav-link[href="#home"]').classList.add('active-link');
             } else if (!document.querySelector('.nav-link.active-link') && current === 'home') { 
@@ -448,153 +463,6 @@
                 }
             });
         }
-
-        // --- Música de Fundo com Tone.js (Estilo Piano - Aquarela) ---
-        const musicToggleButton = document.getElementById('musicToggleButton');
-        let musicPlaying = false;
-        let pianoSynth, pianoSequence;
-        let audioContextUserInteracted = false; 
-
-        function setupAquarelaPianoMusic() {
-            // PolySynth com FMSynth para um som mais rico, tentando emular um piano suave
-            pianoSynth = new Tone.PolySynth(Tone.FMSynth, {
-                harmonicity: 3.01,
-                modulationIndex: 14,
-                envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.7 },
-                modulation: { type: "sine" },
-                modulationEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.01, release: 0.5 },
-                volume: -18 // Volume mais baixo para música de fundo
-            }).toDestination();
-            
-            // Adiciona um pouco de reverb para um som mais espacial
-            const reverb = new Tone.Reverb(1.5).toDestination(); // 1.5 segundos de decay
-            pianoSynth.connect(reverb);
-
-
-            // Melodia de "Aquarela" adaptada para piano (melodia + harmonia simples)
-            // '4n' = semínima, '2n' = mínima, '8n' = colcheia
-            const aquarelaPianoMelody = [
-                // Intro/Tema A (Compassos 1-4)
-                { time: "0:0:0", notes: ["G4", "C4"], duration: "2n" }, // Melodia G4, Harmonia C4
-                { time: "0:2:0", notes: ["E4", "C4"], duration: "2n" },
-                { time: "1:0:0", notes: ["C4", "G3"], duration: "2n" },
-                { time: "1:2:0", notes: ["D4", "G3"], duration: "4n" },
-                { time: "1:3:0", notes: ["E4", "C4"], duration: "4n" },
-
-                { time: "2:0:0", notes: ["G4", "C4"], duration: "2n" },
-                { time: "2:2:0", notes: ["E4", "C4"], duration: "2n" },
-                { time: "3:0:0", notes: ["C4", "G3"], duration: "2n" },
-                { time: "3:2:0", notes: ["A3", "F3"], duration: "2n" },
-
-                // Tema B (Compassos 5-8)
-                { time: "4:0:0", notes: ["C5", "F4"], duration: "4n" },
-                { time: "4:1:0", notes: ["B4", "G4"], duration: "4n" },
-                { time: "4:2:0", notes: ["A4", "F4"], duration: "2n" },
-                { time: "5:0:0", notes: ["G4", "C4"], duration: "2n" },
-                { time: "5:2:0", notes: ["F4", "D4"], duration: "4n" },
-                { time: "5:3:0", notes: ["E4", "C4"], duration: "4n" },
-                
-                { time: "6:0:0", notes: ["D4", "G3"], duration: "2n" },
-                { time: "6:2:0", notes: ["C4", "G3"], duration: "1m" }, // Finaliza a frase
-
-                // Variação/Ponte (Compassos 9-12)
-                { time: "8:0:0", notes: ["G3", "C3"], duration: "2n"}, 
-                { time: "8:2:0", notes: ["B3", "G3"], duration: "2n"},
-                { time: "9:0:0", notes: ["D4", "A3"], duration: "2n"},
-                { time: "9:2:0", notes: ["G4", "B3"], duration: "2n"},
-
-                { time: "10:0:0", notes: ["C4", "F3"], duration: "2n"},
-                { time: "10:2:0", notes: ["E4", "C4"], duration: "2n"},
-                { time: "11:0:0", notes: ["G4", "D4"], duration: "2n"},
-                { time: "11:2:0", notes: ["C5", "E4"], duration: "2n"},
-
-                // Finalização suave (Compassos 13-14)
-                { time: "12:0:0", notes: ["B4", "G4"], duration: "4n"},
-                { time: "12:1:0", notes: ["A4", "F4"], duration: "4n"},
-                { time: "12:2:0", notes: ["G4", "E4"], duration: "2n"},
-                { time: "13:0:0", notes: ["E4", "C4"], duration: "1m"},
-            ];
-
-            pianoSequence = new Tone.Part((time, value) => {
-                // value.notes é um array de notas para tocar simultaneamente (acorde)
-                pianoSynth.triggerAttackRelease(value.notes, value.duration || "8n", time);
-            }, aquarelaPianoMelody);
-            
-            pianoSequence.loop = true; 
-            pianoSequence.loopEnd = '14m'; 
-            Tone.Transport.bpm.value = 70; // Ritmo calmo e inspirador
-            console.log("Configuração da música 'Aquarela' (estilo piano) concluída.");
-        }
-
-        async function controlMusicPlayback(play) {
-            if (!audioContextUserInteracted && Tone.context.state !== 'running') {
-                try {
-                    await Tone.start(); 
-                    console.log('Contexto de áudio iniciado.');
-                    audioContextUserInteracted = true; 
-                    if (!pianoSynth) { 
-                        setupAquarelaPianoMusic();
-                    }
-                } catch (e) {
-                    console.error("Erro ao iniciar o contexto de áudio do Tone.js:", e);
-                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-exclamation-circle" title="Erro no áudio"></i>';
-                    return; 
-                }
-            } else if (!pianoSynth && audioContextUserInteracted) { 
-                 // Se o contexto já iniciou (ex: por outra interação), mas a música não foi configurada
-                 setupAquarelaPianoMusic();
-            }
-
-
-            if (play) {
-                if (pianoSynth && pianoSequence && (Tone.Transport.state === "stopped" || Tone.Transport.state === "paused")) {
-                    Tone.Transport.start();
-                    if(pianoSequence.state !== "started") pianoSequence.start(0); 
-                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-pause"></i>';
-                    musicPlaying = true;
-                    console.log("Música 'Aquarela' (piano) iniciada/retomada.");
-                }
-            } else { 
-                if (Tone.Transport.state === "started") {
-                    Tone.Transport.pause(); 
-                    if (musicToggleButton) musicToggleButton.innerHTML = '<i class="fas fa-play"></i>';
-                    musicPlaying = false;
-                    console.log("Música 'Aquarela' (piano) pausada.");
-                }
-            }
-        }
-
-        window.addEventListener('load', () => {
-            console.log("Janela carregada. Tentando autoplay da música 'Aquarela' (piano)...");
-            setTimeout(() => controlMusicPlayback(true), 700); 
-        });
-        
-        if (musicToggleButton) {
-            musicToggleButton.addEventListener('click', () => {
-                controlMusicPlayback(!musicPlaying); 
-            });
-        }
-
-        let firstInteractionDoneForMusic = false;
-        function handleFirstUserInteractionForMusic() {
-            if (firstInteractionDoneForMusic) return; 
-
-            if (Tone.context.state !== 'running'){ // Se o contexto não iniciou, tenta iniciar
-                 controlMusicPlayback(true); // Tenta iniciar o áudio e tocar
-            } else if (pianoSynth && !musicPlaying && Tone.Transport.state !== 'started') {
-                // Se o contexto iniciou mas a música não está tocando
-                controlMusicPlayback(true);
-            }
-            firstInteractionDoneForMusic = true; 
-            document.body.removeEventListener('click', handleFirstUserInteractionForMusic, true);
-            document.body.removeEventListener('keydown', handleFirstUserInteractionForMusic, true);
-            document.body.removeEventListener('scroll', handleFirstUserInteractionForMusic, true);
-        }
-
-        document.body.addEventListener('click', handleFirstUserInteractionForMusic, true);
-        document.body.addEventListener('keydown', handleFirstUserInteractionForMusic, true);
-        document.body.addEventListener('scroll', handleFirstUserInteractionForMusic, true);
-
     </script>
 </body>
 </html>
